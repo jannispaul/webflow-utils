@@ -14,9 +14,17 @@ Instead of `src` use `data-src` in source element
 ### Example
 
 ```html
-<script defer src="/dist/lazyloadvideo.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/lazyloadvideo.js"></script>
 
 <video autoplay muted playsinline replay>
   <source data-src="https://res.cloudinary.com/dgvgmpeue/video/upload/c_scale,w_1180/c_crop,g_center,h_506,w_1000/v1705852542/arise-2024.mp4" type="video/mp4" />
 </video>
+```
+
+## Low Power Mode Video
+
+Removes the play button on Safari from autoplay videos. Does not require any attributes.
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/lowpowermodevideo.js"></script>
 ```

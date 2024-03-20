@@ -17,8 +17,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        lazyLoadVideo: "utils/lazyloadvideo.js",
-        lowPowerModeVideo: "utils/lowpowermodevideo.js",
+        videolazyload: "utils/videolazyload.js",
+        videolowpowermode: "utils/videolowpowermode.js",
       },
       output: {
         entryFileNames: `[name].js`,

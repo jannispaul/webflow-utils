@@ -7,11 +7,11 @@ This is a collection of scripts that I use to enhance my workflow with webflow. 
 Lazy load html5 video. To use:
 Instead of `src` use `data-src` in source element
 
-### Optional:
+**Optional:**
 
 - Add atribute `replay` to replay the video from the beginning when it enters the viewport
 
-### Example
+**Example**
 
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/videolazyload.js"></script>

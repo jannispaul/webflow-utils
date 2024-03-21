@@ -1,6 +1,6 @@
 # Webflow utils
 
-This is a collection of scripts that I use to enhance my workflow with webflow. They are copy and paste drop-ins and can be configurerd with attributes.
+This is a collection of scripts that I use to enhance my workflow with webflow. They are copy and paste drop-ins that can be configurerd with attributes.
 
 ## Lazy Load Video
 
@@ -9,7 +9,7 @@ Instead of `src` use `data-src` in source element
 
 **Optional:**
 
-- Add atribute `replay` to replay the video from the beginning when it enters the viewport
+- Add attribute `replay` to replay the video from the beginning when it enters the viewport
 
 **Example**
 

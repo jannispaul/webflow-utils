@@ -1,4 +1,6 @@
 (() => {
+  // Videos need to have data-source attribute to work
+  // Optional: replay attribute to replay the video when it comes into view
   // Wait for load event
   document.addEventListener("DOMContentLoaded", function () {
     // Get all videos with source data-src (relies on css )

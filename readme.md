@@ -28,3 +28,16 @@ Removes the play button on Safari from autoplay videos. Does not require any att
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/videolowpowermode.js"></script>
 ```
+
+## Fix Lazy Load
+
+Loads all lazy loaded images inside a wrapper when the wrapper appears in viewport. Useful for sliders/ marquee so the images dont come in with a delay
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/fixlazyload.js"></script>
+
+<section data-element="lazy-wrapper">
+  <img loading="lazy" />
+  <img loading="lazy" />
+</section>
+```

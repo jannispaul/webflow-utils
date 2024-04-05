@@ -49,7 +49,7 @@ Create html `dialog` from divs with data attributes.
 **Required attributes**
 `data-dialog="dialog-name"`
 
-**Option attributes:**
+**Optional attributes:**
 
 - `data-dialog="close"` for close button inside, to close parent dialog
 - `data-dialog-trigger="dialog-name"` to open dialog. e.g. Button click

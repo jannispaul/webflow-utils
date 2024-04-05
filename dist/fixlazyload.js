@@ -1,0 +1,1 @@
+document.addEventListener("DOMContentLoaded",function(){const r=document.querySelectorAll('[data-element="lazy-wrapper"]');if(!r)return;const t=new IntersectionObserver(e=>{e.forEach(n=>{if(n.isIntersecting){const o=n.target;o.querySelectorAll("img[loading='lazy']").forEach(a=>a.removeAttribute("loading")),t.unobserve(o)}})});r.forEach(e=>{t.observe(e)})});

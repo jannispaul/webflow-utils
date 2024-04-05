@@ -1,1 +1,1 @@
-document.querySelectorAll("video[autoplay]").forEach(o=>{o.play().catch(e=>{e.name==="NotAllowedError"&&(console.log("Low power mode: video autoplay deactivated"),o.removeAttribute("autoplay"),o.controls=!0,o.controls=!1)})});
+document.addEventListener("DOMContentLoaded",function(){document.querySelectorAll("video[autoplay]").forEach(o=>{o.play().catch(e=>{e.name==="NotAllowedError"&&(o.removeAttribute("autoplay"),o.controls=!0,o.controls=!1)})})});

@@ -14,9 +14,16 @@ export default defineConfig({
   preview: {
     port: 5555,
   },
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
   build: {
+    minify: "esbuild",
+
     rollupOptions: {
       input: {
+        dialog: "utils/dialog.js",
+        fixlazyload: "utils/fixlazyload.js",
         videolazyload: "utils/videolazyload.js",
         videolowpowermode: "utils/videolowpowermode.js",
       },

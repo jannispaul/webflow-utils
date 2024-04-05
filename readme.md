@@ -41,3 +41,25 @@ Loads all lazy loaded images inside a wrapper when the wrapper appears in viewpo
   <img loading="lazy" />
 </section>
 ```
+
+## Dialogs
+
+Create html `dialog` from divs with data attributes
+
+** Required attributes **
+`data-dialog="dialog-name"`
+
+** Option attributes: **
+`data-dialog="close"` for close button inside, to close parent dialog
+`data-dialog-trigger="trigger-name"` to open dialog. e.g. Button click
+`data-dialog-dealy="delay-time"` to automatically open dialog after delay set in seconds. Opens once per session.
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/dialog.js"></script>
+
+<div data-dialog="newsletter" data-dialog-dealy="10">
+  <h2>Dialog content</h2>
+</div>
+
+<button data-dialog-trigger="newsletter">Open Newsletter Dialog</button>
+```

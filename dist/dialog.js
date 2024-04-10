@@ -1,1 +1,27 @@
-(()=>{let l=document.querySelectorAll("[data-dialog]:not([data-dialog='close'])"),d=document.querySelectorAll("[data-dialog='close']"),i=document.querySelectorAll("[data-dialog-trigger]");function g(t){let e=document.createElement("dialog");e.appendChild(t),e.setAttribute("data-dialog",t.getAttribute("data-dialog")),e.setAttribute("data-dialog-delay",t.getAttribute("data-dialog-delay")),document.body.appendChild(e),e.addEventListener("click",a=>{a.target===e&&e.close()}),t.getAttribute("data-dialog-delay")&&n(e)}l.forEach(t=>{g(t)}),d.forEach(t=>{t.addEventListener("click",()=>{t.closest("dialog").close()})});function n(t){let e=t.getAttribute("data-dialog"),a=parseInt(t.getAttribute("data-dialog-delay"))*1e3;sessionStorage.getItem(e)!=="opened"&&setTimeout(()=>{o(t)},a)}function o(t){let e=t.getAttribute("data-dialog");t.showModal(),sessionStorage.setItem(e,"opened")}i.forEach(t=>{t.addEventListener("click",()=>{let e=t.getAttribute("data-dialog-trigger"),a=document.querySelector(`[data-dialog="${e}"]`);a&&o(a)})});function r(){let t=document.createElement("style");t.innerHTML="dialog {border: none; background: transparent; padding:0;}",document.head.appendChild(t)}r()})();
+(()=>{let d=document.querySelectorAll("[data-dialog]:not([data-dialog='close'])"),i=document.querySelectorAll("[data-dialog='close']"),l=document.querySelectorAll("[data-dialog-trigger]");function n(e){let t=document.createElement("dialog");t.appendChild(e),t.setAttribute("data-dialog",e.getAttribute("data-dialog")),t.setAttribute("data-dialog-delay",e.getAttribute("data-dialog-delay")),document.body.appendChild(t),t.addEventListener("click",a=>{a.target===t&&t.close()}),e.getAttribute("data-dialog-delay")&&r(t)}d.forEach(e=>{n(e)}),i.forEach(e=>{e.addEventListener("click",()=>{e.closest("dialog").close()})});function r(e){let t=e.getAttribute("data-dialog"),a=parseInt(e.getAttribute("data-dialog-delay"))*1e3;sessionStorage.getItem(t)!=="opened"&&setTimeout(()=>{o(e)},a)}function o(e){let t=e.getAttribute("data-dialog");e.showModal(),sessionStorage.setItem(t,"opened")}l.forEach(e=>{e.addEventListener("click",()=>{let t=e.getAttribute("data-dialog-trigger"),a=document.querySelector(`[data-dialog="${t}"]`);a&&o(a)})});function g(){let e=document.createElement("style");e.innerHTML=`
+    dialog {border: none; background: transparent; padding:0;}
+    
+    /* Animation for dialog */
+    dialog[open] {animation: fade-in 0.4s ease-out;}
+    dialog[open]::backdrop {animation: backdrop-fade-in 0.4s ease-out forwards;}
+    
+    /* Animation keyframes */
+    @keyframes fade-in {
+      0% {
+        opacity: 0;
+        display: none;
+      }
+      100% {
+        opacity: 1;
+        display: block;
+      }
+    }
+    @keyframes backdrop-fade-in {
+      0% {
+        background-color: rgb(0 0 0 / 0%);
+      }
+      100% {
+        background-color: rgb(0 0 0 / 50%);
+      }
+    }    
+    `,document.head.appendChild(e)}g()})();

@@ -85,10 +85,38 @@
     });
   });
 
-  // Create style for dialog in head of document: no border, background transparent
+  // Create style for dialog in head of document:
+  // No border, background transparent
+  // Animation for fade in and backdrop fade in
   function createDialogStyle() {
     let style = document.createElement("style");
-    style.innerHTML = `dialog {border: none; background: transparent; padding:0;}`;
+    style.innerHTML = `
+    dialog {border: none; background: transparent; padding:0;}
+    
+    /* Animation for dialog */
+    dialog[open] {animation: fade-in 0.4s ease-out;}
+    dialog[open]::backdrop {animation: backdrop-fade-in 0.4s ease-out forwards;}
+    
+    /* Animation keyframes */
+    @keyframes fade-in {
+      0% {
+        opacity: 0;
+        display: none;
+      }
+      100% {
+        opacity: 1;
+        display: block;
+      }
+    }
+    @keyframes backdrop-fade-in {
+      0% {
+        background-color: rgb(0 0 0 / 0%);
+      }
+      100% {
+        background-color: rgb(0 0 0 / 50%);
+      }
+    }    
+    `;
     document.head.appendChild(style);
   }
   createDialogStyle();

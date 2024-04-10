@@ -1,4 +1,5 @@
 // Script to create dialogs on website
+// Docs for dialog: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
 // Attributes needed:
 // data-dialog="dialog-name"
 // data-dialog="close" to close parent dialog

@@ -98,7 +98,7 @@
     dialog[open]::backdrop {animation: backdrop-fade-in 0.4s ease-out forwards;}
     
     /* Animation keyframes */
-    @keyframes fade-in {
+    @keyframes dialog-fade-in {
       0% {opacity: 0;display: none;}
       100% {opacity: 1;display: block;}
     }

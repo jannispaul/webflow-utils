@@ -99,22 +99,12 @@
     
     /* Animation keyframes */
     @keyframes fade-in {
-      0% {
-        opacity: 0;
-        display: none;
-      }
-      100% {
-        opacity: 1;
-        display: block;
-      }
+      0% {opacity: 0;display: none;}
+      100% {opacity: 1;display: block;}
     }
     @keyframes backdrop-fade-in {
-      0% {
-        background-color: rgb(0 0 0 / 0%);
-      }
-      100% {
-        background-color: rgb(0 0 0 / 50%);
-      }
+      0% {background: rgb(0 0 0 / 0%);}
+      100% {background: rgb(0 0 0 / 50%);}
     }    
     `;
     document.head.appendChild(style);

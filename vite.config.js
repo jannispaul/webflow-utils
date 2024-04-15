@@ -26,6 +26,7 @@ export default defineConfig({
         fixlazyload: "utils/fixlazyload.js",
         videolazyload: "utils/videolazyload.js",
         videolowpowermode: "utils/videolowpowermode.js",
+        autoplaytabs: "utils/autoplaytabs.js",
       },
       output: {
         entryFileNames: `[name].js`,

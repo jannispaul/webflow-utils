@@ -66,3 +66,26 @@ Create html `dialog` from divs with data attributes.
 
 <button data-dialog-trigger="newsletter">Open Newsletter Dialog</button>
 ```
+
+## Autoplay Webflow Tabs
+
+Script to autoplay webflow tabs. Based on flowbase auto rotation tabs: https://www.flowbase.co/blog/add-auto-rotating-tabs-in-webflow
+
+**Improvements over flowbase script:**
+
+- Configuration with data attributes
+- Starts / stops the autoplay when in and out of view. Therefore focus will no be lost from other element
+- Progress animtion with js .animate()
+- Does not rely on jQuery
+
+**Required attributes:**
+`data-tabs-element="tabs"` put on the webflow tabs element (not the tabs wrapper).
+
+**Optional attributes:**
+
+- `data-tabs-element="progress"` to define an animated progress bar. Depending on the size of the parent it automatically decides if horizontal or vertical and scales from 0% to 100% width/height
+- `data-tabs-duration="5"` duration to automatically go to the next tab in miliseconds
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/autoplaytabs.js"></script>
+```

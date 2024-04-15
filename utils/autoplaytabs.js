@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Connect your class names to elements.
     function activateTabAfterDelay(currentTab) {
+      clearTimeout(tabTimeout);
       tabTimeout = setTimeout(() => {
         if (!isVisible) return;
         // Get next tab
@@ -89,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Handle tab click/focus: activate tab and show animation
     function handleEvent(tab) {
       activeIndex = tabs.indexOf(tab);
+      console.log(activeIndex, tab, isVisible, tabTimeout);
       startProgressAnimation(tab);
       activateTabAfterDelay(tab);
     }

@@ -74,6 +74,7 @@ Script to autoplay webflow tabs. Based on flowbase auto rotation tabs: https://w
 **Improvements over flowbase script:**
 
 - Configuration with data attributes
+- Works with both focus (keyboard) and click (mouse)
 - Starts / stops the autoplay when in and out of view. Therefore focus will no be lost from other element
 - Progress animtion with js .animate()
 - Does not rely on jQuery

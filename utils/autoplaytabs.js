@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     function activateTab(tab) {
       tab ? tab.click() : tabs[0].click();
-      activeIndex = tabs.indexOf(tab);
+      //   activeIndex = tabs.indexOf(tab);
     }
 
     function startProgressAnimation(tab) {
@@ -86,12 +86,14 @@ document.addEventListener("DOMContentLoaded", () => {
       progressBar && (activeAnimation = progressBar.animate(progressAnimation, { duration: duration, fill: "forwards" }));
     }
 
+    // Handle tab click/focus: activate tab and show animation
     function handleEvent(tab) {
-      clearTimeout(tabTimeout);
+      activeIndex = tabs.indexOf(tab);
       startProgressAnimation(tab);
       activateTabAfterDelay(tab);
     }
-    // Reset Loops
+
+    // Click of focus to view another tab
     tabs.forEach((tab) => tab.addEventListener("focus", () => handleEvent(tab)));
     tabs.forEach((tab) => tab.addEventListener("click", () => handleEvent(tab)));
   });

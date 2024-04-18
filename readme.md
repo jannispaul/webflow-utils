@@ -9,6 +9,7 @@ Instead of `src` use `data-src` in source element
 
 **Optional:**
 
+- Add attribute `data-src-mobile` to load a different video on mobile (max-width: 768px)
 - Add attribute `replay` to replay the video from the beginning when it enters the viewport
 
 **Example**
@@ -17,7 +18,7 @@ Instead of `src` use `data-src` in source element
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/videolazyload.js"></script>
 
 <video autoplay muted playsinline replay>
-  <source data-src="https://www.w3schools.com/tags/mov_bbb.mp4" type="video/mp4" />
+  <source data-src="https://www.w3schools.com/tags/mov_bbb.mp4" data-src-mobile="https://www.w3schools.com/tags/mov_bbb.mp4" type="video/mp4" />
 </video>
 ```
 

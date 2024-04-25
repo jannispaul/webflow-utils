@@ -2,35 +2,35 @@
 
 This is a collection of scripts that I use to enhance my workflow with webflow. They are copy and paste drop-ins that can be configurerd with attributes.
 
-## Lazy Load Video
+## Smart Video
 
-Lazy load html5 video. To use:
-Instead of `src` use `data-src` in source element
+**Features**
 
-**Optional:**
+- Autoplay and autopause (applies to all autoplay html5 videos)
+- Lazy load html5 video.
+- Repsonsive video source and poster
+- Replay video on enter viewport
+- Low power mode disable video playback (on Safari)
 
-- Add attribute `data-src-mobile` to load a different video on mobile (max-width: 768px)
-- Add attribute `replay` to replay the video from the beginning when it enters the viewport
+**Optional attributes:**
+
+- `data-src` on source instead of `src` to lazy load video
+- `data-src-mobile` on source to load a different video on mobile (max-width: 768px)
+- `data-smart-video` & `data-breakpoint` both on script to change breakpoint (default: 768px)
+- `data-poster-mobile` on video to use a different poster on mobile (max-width: 768px)
+- `replay` on video to replay the video from the beginning when it enters the viewport
 
 **Example**
 
 ```html
-<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/videolazyload.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/smart-video.js" data-smart-video data-breakpoint="991></script>
 
-<video autoplay muted playsinline replay>
+<video autoplay muted playsinline replay poster="poster.jpg" data-poster-mobile="mobile-poster.jpg">
   <source data-src="https://www.w3schools.com/tags/mov_bbb.mp4" data-src-mobile="https://www.w3schools.com/tags/mov_bbb.mp4" type="video/mp4" />
 </video>
 ```
 
-## Low Power Mode Video
-
-Removes the play button on Safari from autoplay videos. Does not require any attributes.
-
-```html
-<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/videolowpowermode.js"></script>
-```
-
-## Fix Lazy Load
+## Lazy Load Section
 
 Loads all lazy loaded images inside a wrapper when the wrapper appears in viewport. Useful for sliders/ marquee so the images dont come in with a delay
 
@@ -90,4 +90,14 @@ Script to autoplay webflow tabs. Based on flowbase auto rotation tabs: https://w
 
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/autoplaytabs.js"></script>
+```
+
+## Deprecated
+
+## Low Power Mode Video
+
+Removes the play button on Safari from autoplay videos. Does not require any attributes.
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/videolowpowermode.js"></script>
 ```

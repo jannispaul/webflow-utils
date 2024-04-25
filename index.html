@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <script defer src="utils/videolazyload.js"></script>
     <script defer src="utils/videolowpowermode.js"></script>
+    <script defer src="utils/smart-video.js" data-smart-video data-breakpoint="991"></script>
     <style>
       section {
         height: 100vh;
@@ -25,7 +25,7 @@
       </video>
     </section>
     <section>
-      <video muted playsinline replay>
+      <video muted playsinline replay autoplay>
         <source data-src="https://www.w3schools.com/tags/mov_bbb.mp4" type="video/mp4" />
       </video>
     </section>

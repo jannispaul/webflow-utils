@@ -8,12 +8,13 @@
 // data-dialog-trigger="trigger-name"
 // data-dialog-dealy="delay-time"
 
-(() => {
+document.addEventListener("DOMContentLoaded", function () {
+  // (() => {
   console.log("Dialog script loaded");
   // Get all dialog elements, not close elements
   let dialogContentElements = document.querySelectorAll("[data-dialog]:not([data-dialog='close'])");
   // Get all close dialog elements
-  let closeDialogElements = document.querySelectorAll("[data-dialog='close']");
+  // let closeDialogElements = document.querySelectorAll("[data-dialog='close']");
   // Get all trigger dialog elements
   let triggerDialogElements = document.querySelectorAll("[data-dialog-trigger]");
 
@@ -21,40 +22,45 @@
   function createDialog(element) {
     let dialog = document.createElement("dialog");
     // Add element to dialog
-    dialog.appendChild(element);
+    dialog.append(element);
     // Set dialog name
     dialog.setAttribute("data-dialog", element.getAttribute("data-dialog"));
-    // Set dialog delay
-    dialog.setAttribute("data-dialog-delay", element.getAttribute("data-dialog-delay"));
-    //   dialog.innerHTML = element.innerHTML;
-    document.body.appendChild(dialog);
-    // Close dialog if click on backdrop
-    dialog.addEventListener("click", (e) => {
-      if (e.target === dialog) {
-        dialog.close();
-      }
-    });
-    // Call autopopen function if dialog has delay set
+    element.removeAttribute("data-dialog");
+    // Set dialog delay if set
     if (element.getAttribute("data-dialog-delay")) {
-      autoOpenDialog(dialog);
+      dialog.setAttribute("data-dialog-delay", element.getAttribute("data-dialog-delay"));
+      element.removeAttribute("data-dialog-delay");
     }
+    //   dialog.innerHTML = element.innerHTML;
+    document.body.append(dialog);
+    console.log("appending dialog", dialog, document.body.contains(dialog));
   }
 
-  // Create Dialogs from dialog content elements
-  dialogContentElements.forEach((element) => {
-    createDialog(element);
+  async function addDialogs() {
+    // Create Dialogs from dialog content elements
+    dialogContentElements.forEach((element) => {
+      createDialog(element);
+    });
+    console.log("add dialogs");
+    return Promise.resolve();
+  }
+  addDialogs().then(() => {
+    setTimeout(() => {
+      addAutoOpen();
+    }, 100);
   });
 
-  // Close dialog when close dialog element is clicked
-  closeDialogElements.forEach((element) => {
-    element.addEventListener("click", () => {
-      let dialog = element.closest("dialog");
-      dialog.close();
+  function addAutoOpen() {
+    let dialogs = document.querySelectorAll("[data-dialog-delay]");
+    console.log("add auto open", dialogs);
+    dialogs.forEach((dialog) => {
+      autoOpenDialog(dialog);
     });
-  });
+  }
 
   // Function to set auto open on dialog
   function autoOpenDialog(dialog) {
+    console.log("auto open", dialog, document.body.contains(dialog));
     //attributes are on the child element
     let dialogName = dialog.getAttribute("data-dialog");
     let dialogDelayInSeconds = parseInt(dialog.getAttribute("data-dialog-delay")) * 1000;
@@ -68,10 +74,36 @@
       openDialog(dialog);
     }, dialogDelayInSeconds);
   }
+  // Function to check if any dialog is open
+  function isDialogOpen() {
+    // Check if any dialog element is open
+    const dialogs = document.querySelectorAll("dialog");
+    for (const dialog of dialogs) {
+      if (dialog.open) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   // Function to open dialog and write to session storage that it has been opened
   function openDialog(dialog) {
+    console.log(dialog);
+    if (isDialogOpen()) return;
     let dialogName = dialog.getAttribute("data-dialog");
+
+    // Listen for click events
+    dialog.addEventListener("click", (e) => {
+      console.log(e);
+      // Close dialog if click on backdrop
+      if (e.target === dialog) {
+        dialog.close();
+        // Close dialog on close button click
+      } else if (e.target.closest("[data-dialog='close']")) {
+        dialog.close();
+      }
+    });
+
     dialog.showModal();
     sessionStorage.setItem(dialogName, "opened");
   }
@@ -92,23 +124,24 @@
   function createDialogStyle() {
     let style = document.createElement("style");
     style.innerHTML = `
-    dialog {border: none; background: transparent; padding:0;}
-    
-    /* Animation for dialog */
-    dialog[open] {animation: fade-in 0.4s ease-out;}
-    dialog[open]::backdrop {animation: backdrop-fade-in 0.4s ease-out forwards;}
-    
-    /* Animation keyframes */
-    @keyframes dialog-fade-in {
-      0% {opacity: 0;display: none;}
-      100% {opacity: 1;display: block;}
-    }
-    @keyframes backdrop-fade-in {
-      0% {background: rgb(0 0 0 / 0%);}
-      100% {background: rgb(0 0 0 / 50%);}
-    }    
-    `;
+      dialog {border: none; background: transparent; padding:0;}
+      
+      /* Animation for dialog */
+      dialog[open] {animation: fade-in 0.4s ease-out;}
+      dialog[open]::backdrop {animation: backdrop-fade-in 0.4s ease-out forwards;}
+      
+      /* Animation keyframes */
+      @keyframes dialog-fade-in {
+        0% {opacity: 0;display: none;}
+        100% {opacity: 1;display: block;}
+      }
+      @keyframes backdrop-fade-in {
+        0% {background: rgb(0 0 0 / 0%);}
+        100% {background: rgb(0 0 0 / 50%);}
+      }    
+      `;
     document.head.appendChild(style);
   }
   createDialogStyle();
-})();
+  // })();
+});

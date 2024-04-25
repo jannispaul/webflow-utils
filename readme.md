@@ -35,7 +35,7 @@ This is a collection of scripts that I use to enhance my workflow with webflow. 
 Loads all lazy loaded images inside a wrapper when the wrapper appears in viewport. Useful for sliders/ marquee so the images dont come in with a delay
 
 ```html
-<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/fixlazyload.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/lazy-load-section.js"></script>
 
 <section data-element="lazy-wrapper">
   <img loading="lazy" />
@@ -89,7 +89,7 @@ Script to autoplay webflow tabs. Based on flowbase auto rotation tabs: https://w
 - `data-tabs-duration="5"` duration to automatically go to the next tab in miliseconds
 
 ```html
-<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/autoplaytabs.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/autoplay-tabs.js"></script>
 ```
 
 ## Deprecated
@@ -99,5 +99,5 @@ Script to autoplay webflow tabs. Based on flowbase auto rotation tabs: https://w
 Removes the play button on Safari from autoplay videos. Does not require any attributes.
 
 ```html
-<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/videolowpowermode.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/video-low-power-mode.js"></script>
 ```

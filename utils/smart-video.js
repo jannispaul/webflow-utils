@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Get all script elements with type="module"
   let currentScriptTag = document.querySelector("script[data-smart-video]");
   // Set the breakpointWidth based on the data-breakpoint attribute or fallback
-  let mobileWidth = currentScriptTag?.dataset.breakpoint || 768;
+  let mobileWidth = currentScriptTag?.dataset.breakpoint || 767;
 
   function checkForMobile() {
     return window.matchMedia(`(max-width:${mobileWidth}px)`).matches;

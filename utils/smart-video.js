@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let lazyVideos = Array.from(document.querySelectorAll("video:has(source[data-src])"));
   let autoPlayVideos = Array.from(document.querySelectorAll("video[autoplay]"));
   let isMobile;
-  // Get all script elements with type="module"
+  // Get all script elements with data-smart-video
   let currentScriptTag = document.querySelector("script[data-smart-video]");
   // Set the breakpointWidth based on the data-breakpoint attribute or fallback
   let mobileWidth = currentScriptTag?.dataset.breakpoint || 767;
@@ -46,13 +46,14 @@ document.addEventListener("DOMContentLoaded", function () {
       entries.forEach((video) => {
         if (video.isIntersecting) {
           // Only play if the video was loaded before
-          if (video.target.hasAttribute("loaded")) {
-            video.target.play().catch((error) => {
-              if (error.name === "NotAllowedError") {
-                disableVideo(video.target);
-              }
-            });
-          }
+          // if (video.target.hasAttribute("loaded")) {
+          console.log("intersecting", video.target);
+          video.target.play().catch((error) => {
+            if (error.name === "NotAllowedError") {
+              disableVideo(video.target);
+            }
+          });
+          // }
         } else {
           console.log("not intersecting", video.target);
           video.target.pause();
@@ -114,3 +115,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+// TODO remove observer from videos without loop or replay attribute
+// Currently those get replayed when they come into view
+
+// TODO add attribute to disable things individually (e.g. autoplay)

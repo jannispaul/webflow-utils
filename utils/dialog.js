@@ -125,20 +125,24 @@ document.addEventListener("DOMContentLoaded", function () {
     let style = document.createElement("style");
     style.innerHTML = `
       dialog {border: none; background: transparent; padding:0;}
-      
       /* Animation for dialog */
-      dialog[open] {animation: fade-in 0.4s ease-out;}
-      dialog[open]::backdrop {animation: backdrop-fade-in 0.4s ease-out forwards;}
-      
-      /* Animation keyframes */
-      @keyframes dialog-fade-in {
-        0% {opacity: 0;display: none;}
-        100% {opacity: 1;display: block;}
+      dialog {
+        opacity: 0;
+        transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        transform: translateY(2rem);
       }
-      @keyframes backdrop-fade-in {
-        0% {background: rgb(0 0 0 / 0%);}
-        100% {background: rgb(0 0 0 / 50%);}
-      }    
+      ::backdrop{ 
+        opacity: 0;
+        transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete;
+      }
+      dialog[open] {opacity: 1;transform: translateY(0rem);}
+      dialog[open]::backdrop {opacity: 0.6;}
+      @starting-style {
+        dialog[open], dialog[open]::backdrop {
+          opacity: 0;
+          transform: translateY(2rem);
+        ｝
+      } 
       `;
     document.head.appendChild(style);
   }

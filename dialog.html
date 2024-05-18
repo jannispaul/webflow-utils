@@ -1,0 +1,31 @@
+// html with dialog.js script, button and dialog
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script defer src="/utils/dialog.js"></script>
+    <style>
+      body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .test {
+        padding: 4rem;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <section>
+      <button data-dialog-trigger="dialog-1">Show dialog</button>
+      <div data-dialog="dialog-1" class="test">
+        <p>This is a dialog</p>
+        <button data-dialog="close">Close</button>
+      </dialog>
+    </div>
+  </body>
+</html>

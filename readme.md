@@ -92,6 +92,20 @@ Script to autoplay webflow tabs. Based on flowbase auto rotation tabs: https://w
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/autoplay-tabs.js"></script>
 ```
 
+## Format Number
+
+Script to format numbers with thousand separators / decimals according to locale. Default to "en-US"
+
+**Required attributes:**
+`data-number="number"`
+
+**Optional attributes:**
+`data-locale="en-US"` to change locale.
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/format-number.js"></script>
+```
+
 ## Deprecated
 
 ## Low Power Mode Video

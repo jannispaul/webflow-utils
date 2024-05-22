@@ -6,7 +6,7 @@
 
 // Option attributes:
 // data-dialog-trigger="trigger-name"
-// data-dialog-dealy="delay-time"
+// data-dialog-delay="delay-time"
 
 document.addEventListener("DOMContentLoaded", function () {
   // (() => {

@@ -1,0 +1,1 @@
+document.addEventListener("DOMContentLoaded",()=>{function o(r,t="en-US"){return new Intl.NumberFormat(t).format(r)}function a(){document.querySelectorAll('[data-element="number"]').forEach(t=>{try{const e=t.textContent.trim(),n=parseFloat(e);if(isNaN(n))throw new Error(`Invalid number: ${e}`);const m=t.getAttribute("data-locale"),c=o(n,m);t.textContent=c}catch{}})}a()});

@@ -4,13 +4,8 @@
 // data-locale="" to overwrite the locale
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Function to format numbers to English
-  function formatNumberToLocale(number, locale = "en-US") {
-    return new Intl.NumberFormat(locale).format(number);
-  }
-
   // Function to process all elements with data-element="number"
-  function formatElements() {
+  function formatNumbers() {
     // Select all elements with data-element="number"
     const elements = document.querySelectorAll('[data-element="number"]');
 
@@ -26,12 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isNaN(number)) {
           throw new Error(`Invalid number: ${content}`);
         }
-
-        // Get the locale from the element's data-locale attribute
-        const locale = element.getAttribute("data-locale");
-
-        // Format the number to English
-        const formattedNumber = formatNumberToLocale(number, locale);
+        // Get the locale from the element's data-locale attribute or default to "en-US"
+        const locale = element.getAttribute("data-locale") || "en-US";
+        // Format the number to locale
+        const formattedNumber = new Intl.NumberFormat(locale).format(number);
 
         // Update the element's content with the formatted number
         element.textContent = formattedNumber;
@@ -42,5 +35,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  formatElements();
+  formatNumbers();
 });

@@ -1,4 +1,4 @@
-// Videos need to have data-source attribute to work
+// Videos need to have autoplay and data-src attribute to work
 // Optional:
 // data-breakpount -> on script tag, if you want to load video on mobile
 // data-src-mobile -> if you want to load a different video on mobile (max-width: 768px)

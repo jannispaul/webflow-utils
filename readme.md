@@ -12,6 +12,10 @@ This is a collection of scripts that I use to enhance my workflow with webflow. 
 - Replay video on enter viewport
 - Low power mode disable video playback (on Safari)
 
+**Required attributes:**
+
+- `autoplay` on video
+
 **Optional attributes:**
 
 - `data-src` on source instead of `src` to lazy load video
@@ -23,7 +27,7 @@ This is a collection of scripts that I use to enhance my workflow with webflow. 
 **Example**
 
 ```html
-<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/smart-video.js" data-smart-video data-breakpoint="991></script>
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@v1.0.0/dist/smart-video.js" data-smart-video data-breakpoint="991"></script>
 
 <video autoplay muted playsinline replay poster="poster.jpg" data-poster-mobile="mobile-poster.jpg">
   <source data-src="https://www.w3schools.com/tags/mov_bbb.mp4" data-src-mobile="https://www.w3schools.com/tags/mov_bbb.mp4" type="video/mp4" />

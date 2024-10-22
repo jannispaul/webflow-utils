@@ -8,7 +8,7 @@
 // data-dialog-trigger="trigger-name"
 // data-dialog-delay="delay-time"
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   // (() => {
   console.log("Dialog script loaded");
   // Get all dialog elements, not close elements
@@ -44,10 +44,10 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("add dialogs");
     return Promise.resolve();
   }
-  addDialogs().then(() => {
-    setTimeout(() => {
-      addAutoOpen();
-    }, 100);
+  await addDialogs().then(() => {
+    // setTimeout(() => {
+    addAutoOpen();
+    // }, 100);
   });
 
   function addAutoOpen() {

@@ -1,1 +1,52 @@
-document.addEventListener("DOMContentLoaded",function(){let c=Array.from(document.querySelectorAll("video:has(source[data-src])")),d=Array.from(document.querySelectorAll("video[autoplay]")),b=c.concat(d),a,s=document.querySelector("script[data-smart-video]"),f=(s==null?void 0:s.dataset.breakpoint)||767;function l(){return window.matchMedia(`(max-width:${f}px)`).matches}if(a=l(),"IntersectionObserver"in window){let u=function(e){e.removeAttribute("autoplay"),e.controls=!0,e.controls=!1,o.unobserve(e)};var p=u;let t=new IntersectionObserver((e,n)=>{e.forEach(r=>{r.isIntersecting?r.target.hasAttribute("loaded")||i(r.target):r.target.hasAttribute("loaded")&&t.unobserve(r.target)})},{rootMargin:"0px 0px 200px 0px"}),o=new IntersectionObserver((e,n)=>{e.forEach(r=>{r.isIntersecting?r.target.play().catch(h=>{h.name==="NotAllowedError"&&u(r.target)}):(r.target.pause(),r.target.hasAttribute("replay")&&(r.target.currentTime=0))})});b.forEach(e=>{g(e),!e.hasAttribute("loaded")&&Array.from(e.children).some(n=>n.hasAttribute("data-src"))&&t.observe(e),e.hasAttribute("autoplay")&&o.observe(e)})}function i(t){for(let o of t.children)o.tagName==="SOURCE"&&(o.src=a&&o.dataset.srcMobile?o.dataset.srcMobile:o.dataset.src);t.load(),t.setAttribute("loaded",!0)}function g(t){a&&t.dataset.posterMobile&&t.setAttribute("poster",t.dataset.posterMobile)}window.addEventListener("resize",()=>{if(a!==l())a=l();else return;c.forEach(function(t){t.hasAttribute("loaded")&&i(t)})})});
+document.addEventListener("DOMContentLoaded", function () {
+  let i = Array.from(document.querySelectorAll("video:has(source[data-src])")),
+    b = Array.from(document.querySelectorAll("video[autoplay]")),
+    f = Array.from(document.querySelectorAll("video[replay]")),
+    g = [...new Set([...i, ...b, ...f])],
+    o,
+    s = document.querySelector("script[data-smart-video]"),
+    p = (s == null ? void 0 : s.dataset.breakpoint) || 767;
+  function l() {
+    return window.matchMedia(`(max-width:${p}px)`).matches;
+  }
+  if (((o = l()), "IntersectionObserver" in window)) {
+    let u = function (t) {
+      t.removeAttribute("autoplay"), (t.controls = !0), (t.controls = !1), a.unobserve(t);
+    };
+    var A = u;
+    let r = new IntersectionObserver(
+        (t, n) => {
+          t.forEach((e) => {
+            e.isIntersecting && (e.target.hasAttribute("loaded") || c(e.target), !e.target.hasAttribute("loop") && !e.target.hasAttribute("replay") && r.unobserve(e.target));
+          });
+        },
+        { rootMargin: "0px 0px 200px 0px" }
+      ),
+      a = new IntersectionObserver((t, n) => {
+        t.forEach((e) => {
+          e.isIntersecting
+            ? e.target.play().catch((h) => {
+                h.name === "NotAllowedError" && u(e.target);
+              })
+            : (e.target.pause(), e.target.hasAttribute("replay") && (e.target.currentTime = 0), !e.target.hasAttribute("loop") && !e.target.hasAttribute("replay") && a.unobserve(e.target));
+        });
+      });
+    g.forEach((t) => {
+      t.hasAttribute("ignore") || (d(t), !t.hasAttribute("loaded") && Array.from(t.children).some((n) => n.hasAttribute("data-src")) && r.observe(t), (t.hasAttribute("autoplay") || t.hasAttribute("loop") || t.hasAttribute("replay")) && a.observe(t));
+    });
+  }
+  function c(r) {
+    for (let a of r.children) a.tagName === "SOURCE" && (a.src = o && a.dataset.srcMobile ? a.dataset.srcMobile : a.dataset.src);
+    r.load(), r.setAttribute("loaded", !0);
+  }
+  function d(r) {
+    o && r.dataset.posterMobile && r.setAttribute("poster", r.dataset.posterMobile);
+  }
+  window.addEventListener("resize", () => {
+    if (o !== l()) o = l();
+    else return;
+    i.forEach(function (r) {
+      r.hasAttribute("loaded") && c(r);
+    });
+  });
+});

@@ -1,72 +1,81 @@
-// Videos need to have data-src attribute to work
+// Videos need to have data-src, replay or loop attribute to work
 // Optional:
 // autoplay for smart autoplay, otherwise only lazy loading
 // data-breakpount -> on script tag, if you want to load video on mobile
 // data-src-mobile -> if you want to load a different video on mobile (max-width: 768px)
 // data-poster-mobile -> if you want to use a different poster on mobile
-// replay attribute to replay the video when it comes into view
-// Wait for load event
+// ignore -> if you want to ignore this video
+// replay attribute to replay the video from the beginning when it comes into view
+
 document.addEventListener("DOMContentLoaded", function () {
-  // Get all videos with source data-src (relies on css )
   let lazyVideos = Array.from(document.querySelectorAll("video:has(source[data-src])"));
   let autoPlayVideos = Array.from(document.querySelectorAll("video[autoplay]"));
-  let allVideos = lazyVideos.concat(autoPlayVideos);
+  let replayVideos = Array.from(document.querySelectorAll("video[replay]"));
+  let allVideos = [...new Set([...lazyVideos, ...autoPlayVideos, ...replayVideos])]; // Ensure no duplicates
   let isMobile;
-  // Get all script elements with data-smart-video
   let currentScriptTag = document.querySelector("script[data-smart-video]");
-  // Set the breakpointWidth based on the data-breakpoint attribute or fallback
   let mobileWidth = currentScriptTag?.dataset.breakpoint || 767;
 
+  console.log(allVideos);
+  /**
+   * Check if the current viewport is below the set breakpoint.
+   * @returns {boolean} True if the viewport is below the breakpoint, false otherwise.
+   */
   function checkForMobile() {
     return window.matchMedia(`(max-width:${mobileWidth}px)`).matches;
   }
   isMobile = checkForMobile();
 
-  // Make sure intersection observer is available
+  /**
+   * Intersection Observer to watch videos and set source, set poster source, and playback
+   */
   if ("IntersectionObserver" in window) {
-    // Set up intersection observer for lazy load videos
     let lazyLoadObserver = new IntersectionObserver(
       (entries, observer) => {
         entries.forEach((video) => {
           if (video.isIntersecting) {
-            console.log("intersecting", video.target);
             if (!video.target.hasAttribute("loaded")) {
               setSource(video.target);
+              console.log("setting source", video.target);
             }
-            // Unobserve the video if it doesn't have the 'replay' attribute
-          } else if (video.target.hasAttribute("loaded")) {
-            lazyLoadObserver.unobserve(video.target);
+            if (!video.target.hasAttribute("loop") && !video.target.hasAttribute("replay")) {
+              lazyLoadObserver.unobserve(video.target);
+              console.log("unobserving", video.target);
+            }
           }
         });
       },
-      // Load videos 200px before they enter the viewport
       { rootMargin: "0px 0px 200px 0px" }
     );
 
-    // Set up intersection observer for autoplay and pause videos
     let playbackObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach((video) => {
         if (video.isIntersecting) {
-          // Only play if the video was loaded before
-          // if (video.target.hasAttribute("loaded")) {
-          console.log("intersecting", video.target);
+          //   if (video.target.hasAttribute("loaded")) {
+          console.log("playing", video.target);
           video.target.play().catch((error) => {
             if (error.name === "NotAllowedError") {
               disableVideo(video.target);
             }
           });
-          // }
+          //   }
         } else {
-          console.log("not intersecting", video.target);
+          console.log("pausing", video.target);
           video.target.pause();
           if (video.target.hasAttribute("replay")) {
             video.target.currentTime = 0;
+          }
+          if (!video.target.hasAttribute("loop") && !video.target.hasAttribute("replay")) {
+            playbackObserver.unobserve(video.target);
           }
         }
       });
     });
 
-    // If low power mode is active disable autoplay and unobserve videos
+    /**
+     * Disable video autoplay when NotAllowedError occurs e.g. in low power mode.
+     * @param {HTMLVideoElement} video - The video element.
+     */
     function disableVideo(video) {
       console.log("Low power mode: video autoplay deactivated");
       video.removeAttribute("autoplay");
@@ -76,20 +85,26 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     allVideos.forEach((video) => {
-      console.log("auto play", video);
-      // check if source has data-src
+      if (video.hasAttribute("ignore")) {
+        return; // Skip videos with 'ignore' attribute
+      }
+
       setPosterSource(video);
-      // if video is not loaded and source has data-src create lazy loading observer
+
       if (!video.hasAttribute("loaded") && Array.from(video.children).some((source) => source.hasAttribute("data-src"))) {
-        console.log("observing", video);
         lazyLoadObserver.observe(video);
       }
-      if (video.hasAttribute("autoplay")) {
-        // Oberse only autoplay videos for play and pause
+
+      if (video.hasAttribute("autoplay") || video.hasAttribute("loop") || video.hasAttribute("replay")) {
         playbackObserver.observe(video);
       }
     });
   }
+
+  /**
+   * Set the source of the video based on mobile or not.
+   * @param {HTMLVideoElement} video - The video element.
+   */
   function setSource(video) {
     for (let source of video.children) {
       if (source.tagName === "SOURCE") {
@@ -100,11 +115,14 @@ document.addEventListener("DOMContentLoaded", function () {
     video.setAttribute("loaded", true);
   }
 
+  /**
+   * Sets the poster of a video to the mobile version if in mobile size.
+   * @param {HTMLVideoElement} video - The video element.
+   */
   function setPosterSource(video) {
-    console.log("set poster source");
     isMobile && video.dataset.posterMobile && video.setAttribute("poster", video.dataset.posterMobile);
   }
-  // Resize event listener to change video sources on mobile
+
   window.addEventListener("resize", () => {
     if (isMobile !== checkForMobile()) {
       isMobile = checkForMobile();
@@ -112,15 +130,9 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     lazyVideos.forEach(function (lazyVideo) {
-      // check if video is already loaded
       if (lazyVideo.hasAttribute("loaded")) {
         setSource(lazyVideo);
       }
     });
   });
 });
-
-// TODO remove observer from videos without loop or replay attribute
-// Currently those get replayed when they come into view
-
-// TODO add attribute to disable things individually (e.g. autoplay)

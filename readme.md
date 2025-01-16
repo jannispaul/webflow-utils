@@ -56,20 +56,34 @@ Create html `dialog` from divs with data attributes.
 
 **Optional attributes:**
 
-- `data-dialog="close"` for close button inside, to close parent dialog
+- `data-dialog="close"` for close button inside the dialog, to close the parent dialog on click.
 - `data-dialog-trigger="dialog-name"` to open dialog. e.g. Button click
-- `data-dialog-dealy="delay-time"` to automatically open dialog after delay set in seconds. Opens once per session.
+- `data-dialog-dealy="delay-time"` to automatically open dialog after delay set in seconds. Opens once per session. Set on dialog element.
+- `data-dialog-exit-intent` to automatically open the dialog on exit intent. Set on the dialog element
+- `data-dialog-scroll="dialog-name"` to automatically open the dialog when an element gets scrolled into the viewport. Set on the trigger element.
+- `data-dialog-cooldown="cooldown-time"` Time between dialog triggers in seconds, or as `day, week, month`. Set on dialog element.
+
+**Styles**
+The Dialog element itself can by styled like any normal element. To customize the backdrop color and opacity use CSS
+
+```css
+::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+```
 
 **Example**
 
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/dialog.js"></script>
 
-<div data-dialog="newsletter" data-dialog-dealy="10">
+<div data-dialog="newsletter" data-dialog-dealy="10" data-dialog-exit-intent data-dialog-cooldown="week">
   <h2>Dialog content</h2>
+  <button data-dialog="close">Close</button>
 </div>
 
 <button data-dialog-trigger="newsletter">Open Newsletter Dialog</button>
+<div data-dialog-scroll="newsletter">Scroll Trigger</div>
 ```
 
 ## Autoplay Webflow Tabs

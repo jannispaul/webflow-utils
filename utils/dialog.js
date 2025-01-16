@@ -1,8 +1,8 @@
 // Script to create dialogs on website
 // Docs for dialog: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
 // Attributes needed:
-// data-dialog="dialog-name"
-// data-dialog="close" to close parent dialog
+// data-dialog-id="dialog-name" on dialog content element, has to be unique
+// data-dialog-close on child of dialog to close parent dialog
 
 // Optional attributes:
 // data-dialog-trigger="trigger-name" on elements that should trigger the dialog on click
@@ -18,15 +18,15 @@
 
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("Dialog script loaded");
-  let dialogContentElements = document.querySelectorAll("[data-dialog]:not([data-dialog='close'])");
+  let dialogContentElements = document.querySelectorAll("[data-dialog-id]");
   let triggerDialogElements = document.querySelectorAll("[data-dialog-trigger]");
 
   // Create dialog from element and append it to body
   function createDialog(element) {
     let dialog = document.createElement("dialog");
     dialog.append(element);
-    dialog.setAttribute("data-dialog", element.getAttribute("data-dialog"));
-    element.removeAttribute("data-dialog");
+    dialog.setAttribute("data-dialog-id", element.getAttribute("data-dialog-id"));
+    element.removeAttribute("data-dialog-id");
 
     // Transfer all data-dialog-* attributes to dialog element
     Array.from(element.attributes)
@@ -53,14 +53,14 @@ document.addEventListener("DOMContentLoaded", async function () {
   });
 
   function initializeAllTriggers() {
-    const dialogs = document.querySelectorAll("dialog[data-dialog]");
+    const dialogs = document.querySelectorAll("dialog[data-dialog-id]");
     dialogs.forEach((dialog) => {
       // Initialize time-based trigger
       if (dialog.hasAttribute("data-dialog-delay")) {
         initializeTimeTrigger(dialog);
       }
       // Initialize scroll trigger
-      const dialogName = dialog.getAttribute("data-dialog");
+      const dialogName = dialog.getAttribute("data-dialog-id");
       const scrollTrigger = document.querySelector(`[data-dialog-scroll="${dialogName}"]`);
       if (scrollTrigger) {
         initializeScrollTrigger(dialog, scrollTrigger);
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   function initializeTimeTrigger(dialog) {
-    const dialogName = dialog.getAttribute("data-dialog");
+    const dialogName = dialog.getAttribute("data-dialog-id");
     const delay = parseInt(dialog.getAttribute("data-dialog-delay")) * 1000;
     const cooldown = getCoolDownTime(dialog);
 
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   function initializeScrollTrigger(dialog, triggerElement) {
-    const dialogName = dialog.getAttribute("data-dialog");
+    const dialogName = dialog.getAttribute("data-dialog-id");
     const cooldown = getCoolDownTime(dialog);
 
     const observer = new IntersectionObserver(
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   function initializeExitIntentTrigger(dialog) {
-    const dialogName = dialog.getAttribute("data-dialog");
+    const dialogName = dialog.getAttribute("data-dialog-id");
 
     const cooldown = getCoolDownTime(dialog);
 
@@ -152,10 +152,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   function openDialog(dialog) {
     if (isDialogOpen()) return;
 
-    const dialogName = dialog.getAttribute("data-dialog");
+    const dialogName = dialog.getAttribute("data-dialog-id");
 
     dialog.addEventListener("click", (e) => {
-      if (e.target === dialog || e.target.closest("[data-dialog='close']")) {
+      if (e.target === dialog || e.target.closest("[data-dialog-close]")) {
         dialog.close();
       }
     });
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   triggerDialogElements.forEach((element) => {
     element.addEventListener("click", () => {
       const dialogName = element.getAttribute("data-dialog-trigger");
-      const dialog = document.querySelector(`[data-dialog="${dialogName}"]`);
+      const dialog = document.querySelector(`[data-dialog-id="${dialogName}"]`);
       if (!dialog) return;
       openDialog(dialog);
     });

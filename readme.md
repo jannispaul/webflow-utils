@@ -52,11 +52,11 @@ Loads all lazy loaded images inside a wrapper when the wrapper appears in viewpo
 Create html `dialog` from divs with data attributes.
 
 **Required attributes**
-`data-dialog="dialog-name"`
+`data-dialog-id="dialog-name"` on dialog content, with a unique name
 
 **Optional attributes:**
 
-- `data-dialog="close"` for close button inside the dialog, to close the parent dialog on click.
+- `data-dialog-close` for close button inside the dialog, to close the parent dialog on click.
 - `data-dialog-trigger="dialog-name"` to open dialog. e.g. Button click
 - `data-dialog-dealy="delay-time"` to automatically open dialog after delay set in seconds. Opens once per session. Set on dialog element.
 - `data-dialog-exit-intent` to automatically open the dialog on exit intent. Set on the dialog element
@@ -77,9 +77,9 @@ The Dialog element itself can by styled like any normal element. To customize th
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/dialog.js"></script>
 
-<div data-dialog="newsletter" data-dialog-dealy="10" data-dialog-exit-intent data-dialog-cooldown="week">
+<div data-dialog-id="newsletter" data-dialog-dealy="10" data-dialog-exit-intent data-dialog-cooldown="week">
   <h2>Dialog content</h2>
-  <button data-dialog="close">Close</button>
+  <button data-dialog-close>Close</button>
 </div>
 
 <button data-dialog-trigger="newsletter">Open Newsletter Dialog</button>

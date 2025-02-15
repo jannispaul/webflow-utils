@@ -99,7 +99,7 @@ Script to autoplay webflow tabs. Based on flowbase auto rotation tabs: https://w
 - Does not rely on jQuery
 
 **Required attributes:**
-`data-tabs-element="tabs"` put on the webflow tabs element (not the tabs wrapper).
+`data-tabs-element="tabs"` put on the webflow tabs menu element (not the tabs wrapper).
 
 **Optional attributes:**
 

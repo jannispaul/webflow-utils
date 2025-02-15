@@ -1,7 +1,7 @@
 // Script to autoplay webflow tabs
 // Based on flowbase: https://www.flowbase.co/blog/add-auto-rotating-tabs-in-webflow
 // Mandatory attributes
-// data-tabs-element="tabs"
+// data-tabs-element="tabs" -> put on the webflow tabs menu element (not the tabs wrapper)
 
 // Optional attributes
 // data-tabs-duration="5000" -> duration in miliseconds, defaults to 5seconds
@@ -33,16 +33,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (navigator.userAgent.includes("Safari")) {
       tabs.forEach(
         (t) =>
-          (t.focus = function () {
-            const x = window.scrollX,
-              y = window.scrollY;
-            const f = () => {
-              setTimeout(() => window.scrollTo(x, y), 1);
-              t.removeEventListener("focus", f);
-            };
-            t.addEventListener("focus", f);
-            HTMLElement.prototype.focus.apply(this, arguments);
-          })
+        (t.focus = function () {
+          const x = window.scrollX,
+            y = window.scrollY;
+          const f = () => {
+            setTimeout(() => window.scrollTo(x, y), 1);
+            t.removeEventListener("focus", f);
+          };
+          t.addEventListener("focus", f);
+          HTMLElement.prototype.focus.apply(this, arguments);
+        })
       );
     }
 

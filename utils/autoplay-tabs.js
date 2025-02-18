@@ -94,8 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activateTabAfterDelay(tab);
     }
 
-    // Click of focus to view another tab
+    // Focus (click, keyboard) to view another tab
     tabs.forEach((tab) => tab.addEventListener("focus", () => handleEvent(tab)));
-    tabs.forEach((tab) => tab.addEventListener("click", () => handleEvent(tab)));
   });
 });

@@ -137,6 +137,10 @@ Script to format numbers with thousand separators / decimals according to locale
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/format-number.js"></script>
 ```
 
+## Auto redirect
+
+This script redirects users (routing) to the appropriate language version of a website based on their browser language and the rel="alternate" hreflang attributes. If a user manually selects a language using a language switch (hreflang), their preference is stored in a cookie `preferredLang` to ensure consistency across visits. The script runs early by being placed in the <head> before anything else. Defaults to English if no other language can be found.
+
 ## Deprecated
 
 ## Low Power Mode Video

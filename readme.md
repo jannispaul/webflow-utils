@@ -51,7 +51,7 @@ Loads all lazy loaded images inside a wrapper when the wrapper appears in viewpo
 
 Create html `dialog` from divs with data attributes.
 
-**Required attributes**
+**Required attributes:**
 `data-dialog-id="dialog-name"` on dialog content, with a unique name
 
 **Optional attributes:**
@@ -62,6 +62,19 @@ Create html `dialog` from divs with data attributes.
 - `data-dialog-exit-intent` to automatically open the dialog on exit intent. Set on the dialog element
 - `data-dialog-scroll="dialog-name"` to automatically open the dialog when an element gets scrolled into the viewport. Set on the trigger element.
 - `data-dialog-cooldown="cooldown-time"` Time between dialog triggers in seconds, or as `day, week, month`. Set on dialog element.
+
+**Events:**
+
+- `dialogsCreated` is dispatched when all dialogs have been created and are ready to use
+- `dialogOpened` is dispatched when a dialog is opened. event.detail.element = dialog element
+
+```javascript
+window.addEventListener("dialogsCreated", getDialogs);
+
+window.addEventListener("dialogOpened", (event) => {
+  console.log("open", event.detail.element);
+});
+```
 
 **Styles**
 The Dialog element itself can by styled like any normal element. To customize the backdrop color and opacity use CSS
@@ -77,7 +90,7 @@ The Dialog element itself can by styled like any normal element. To customize th
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/dialog.js"></script>
 
-<div data-dialog-id="newsletter" data-dialog-dealy="10" data-dialog-exit-intent data-dialog-cooldown="week">
+<div data-dialog-id="newsletter" data-dialog-delay="10" data-dialog-exit-intent data-dialog-cooldown="week">
   <h2>Dialog content</h2>
   <button data-dialog-close>Close</button>
 </div>

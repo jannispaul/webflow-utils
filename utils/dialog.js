@@ -11,10 +11,14 @@
 // data-dialog-scroll="dialog-name" on an element to trigger the dialog when element gets scrolled into the viewport
 // data-dialog-cooldown="cooldown-time" Cooldown time between dialog triggers in seconds, or as day, week, month. Set on dialog
 
+// Events:
+// dialogsCreated is dispatched when all dialogs have been created and are ready to use
+// dialogOpened is dispatched when a dialog is opened. event.detail.element = dialog element
+
 // Customize backdrop color and opacity with CSS ::backdrop{ background: rgba(0,0,0,0.5); }
 
 // Roadmap
-// 1. Prevent open multiple dialogs
+// 1. Prevent open multiple dialogs -> Not necessarly a unwanted.
 
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("Dialog script loaded");
@@ -50,6 +54,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   await addDialogs().then(() => {
     initializeAllTriggers();
+    window.dispatchEvent(new CustomEvent("dialogsCreated"));
+    console.log("Done");
   });
 
   function initializeAllTriggers() {
@@ -162,6 +168,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     dialog.showModal();
     localStorage.setItem(`${dialogName}_last_open`, Date.now().toString());
+    window.dispatchEvent(new CustomEvent("dialogOpened", { detail: { element: dialog } }));
   }
 
   // Click trigger handlers

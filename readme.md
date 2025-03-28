@@ -141,6 +141,45 @@ Script to format numbers with thousand separators / decimals according to locale
 
 This script redirects users (routing) to the appropriate language version of a website based on their browser language and the rel="alternate" hreflang attributes. If a user manually selects a language using a language switch (hreflang), their preference is stored in a cookie `preferredLang` to ensure consistency across visits. The script runs early by being placed in the <head> before anything else. Defaults to English if no other language can be found.
 
+## Accordion
+
+Accordion script to animate native `details` elements. The script uses `data-accordion-duration` and `data-accordion-easing` attributes to control the animation duration and easing function.
+Code adapted from: https://css-tricks.com/how-to-animate-the-details-element-using-waapi/
+
+**Required attributes:**
+`data-accordion-element="accordion"` put on the accordion element
+`data-accordion-element="content"` put on the content element (after the summary element)
+
+**Optional attributes:**
+`data-accordion-duration="400"` put on the accordion element for custom duration.
+`data-accordion-easing="cubic-bezier(0.45, 0, 0.55, 1)"` put on the accordion element to add custom easing. Default ease: https://easings.net/#easeInOutQuad
+`data-accordion-group="group-name"` to group accordion elements together and have only one open at a time
+
+Can also be invoked with javascript
+
+```javascript
+document.querySelectorAll("details").forEach((el) => {
+  new Accordion(el);
+});
+```
+
+Example html:
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/accordion.js"></script>
+<details data-accordion-duration="500" class="accordion_details" open="">
+  <summary class="accordion_summary">
+    <div>This is the summary.</div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="100%">
+      <path d="M11.9999 13.1714L16.9497 8.22168L18.3639 9.63589L11.9999 15.9999L5.63599 9.63589L7.0502 8.22168L11.9999 13.1714Z"></path>
+    </svg>
+  </summary>
+  <div data-accordion-element="content" class="accordion_content">
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.</p>
+  </div>
+</details>
+```
+
 ## Deprecated
 
 ## Low Power Mode Video

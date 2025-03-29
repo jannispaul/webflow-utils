@@ -144,16 +144,17 @@ This script redirects users (routing) to the appropriate language version of a w
 ## Accordion
 
 Accordion script to animate native `details` elements. The script uses `data-accordion-duration` and `data-accordion-easing` attributes to control the animation duration and easing function. Uses `.open` class when open since `open` attribute is only added when fully closed.
-Code adapted from: https://css-tricks.com/how-to-animate-the-details-element-using-waapi/
 
 **Required attributes:**
-`data-accordion-element="accordion"` put on the accordion element
-`data-accordion-element="content"` put on the content element (after the summary element)
+
+- `data-accordion-element="accordion"` put on the accordion element
+- `data-accordion-element="content"` put on the content element (after the summary element)
 
 **Optional attributes:**
-`data-accordion-duration="400"` put on the accordion element for custom duration.
-`data-accordion-easing="cubic-bezier(0.45, 0, 0.55, 1)"` put on the accordion element to add custom easing. Default ease: https://easings.net/#easeInOutQuad
-`data-accordion-group="group-name"` to group accordion elements together and have only one open at a time
+
+- `data-accordion-duration="400"` put on the accordion element for custom duration.
+- `data-accordion-easing="cubic-bezier(0.45, 0, 0.55, 1)"` put on the accordion element to add custom easing. Default ease: https://easings.net/#easeInOutQuad
+- `data-accordion-group="group-name"` to group accordion elements together and have only one open at a time
 
 Use `open` attribute to show content by default
 Dont set margin bewteen summary and content elements, padding or border on details element as it will lead to jumps. Instead of border use box-shadow or outline.
@@ -182,6 +183,8 @@ Example html:
   </div>
 </details>
 ```
+
+Code adapted from: https://css-tricks.com/how-to-animate-the-details-element-using-waapi/
 
 ## Deprecated
 

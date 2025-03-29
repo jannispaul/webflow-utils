@@ -10,17 +10,6 @@
 // data-accordion-duration="600" -> duration in miliseconds
 // data-accordion-easing="cubic-bezier(0.37, 0, 0.63, 1)" -> custom easing. Default ease: https://easings.net/#easeInOutQuad
 
-<details data-accordion-duration="500" class="accordion_details" style="" open="">
-  <summary class="accordion_summary">
-    <div>This is some text inside of a div block.</div>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="100%">
-      <path d="M11.9999 13.1714L16.9497 8.22168L18.3639 9.63589L11.9999 15.9999L5.63599 9.63589L7.0502 8.22168L11.9999 13.1714Z"></path>
-    </svg>
-  </summary>
-  <div data-accordion-element="content" class="accordion_content">
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.</p>
-  </div>
-</details>;
 class Accordion {
   // The default constructor for each accordion
   constructor(el) {
@@ -43,6 +32,11 @@ class Accordion {
     this.isExpanding = false;
     // Detect user clicks on the summary element
     this.summary.addEventListener("click", (e) => this.onClick(e));
+
+    // Add open class if accordion is open
+    if (this.el.open) {
+      this.el.classList.add("open");
+    }
   }
 
   // Function called when user clicks on the summary
@@ -53,17 +47,33 @@ class Accordion {
     this.el.style.overflow = "hidden";
     // Check if the element is being closed or is already closed
     if (this.isClosing || !this.el.open) {
+      this.closeOtherAccordionsInGroup();
       this.open();
       // Check if the element is being openned or is already open
     } else if (this.isExpanding || this.el.open) {
       this.shrink();
     }
   }
+  // Function to close all other accordions in the same group
+  closeOtherAccordionsInGroup() {
+    // Get all accordions in the same group
+    const accordionsInGroup = document.querySelectorAll(`[data-accordion-group="${this.group}"][open]`);
 
+    // Close all accordions in the group except the current one
+    accordionsInGroup.forEach((accordion) => {
+      if (accordion !== this.el) {
+        const accordionInstance = new Accordion(accordion);
+        accordionInstance.shrink();
+      }
+    });
+  }
   // Function called to close the content with an animation
   shrink() {
     // Set the element as "being closed"
     this.isClosing = true;
+    this.el.classList.remove("open");
+    // Add an overflow on the <details> to avoid content overflowing
+    this.el.style.overflow = "hidden";
 
     // Store the current height of the element
     const startHeight = `${this.el.offsetHeight}px`;
@@ -110,6 +120,8 @@ class Accordion {
   expand() {
     // Set the element as "being expanding"
     this.isExpanding = true;
+    // Set open class
+    this.el.classList.add("open");
     // Get the current fixed height of the element
     const startHeight = `${this.el.offsetHeight}px`;
     // Calculate the open height of the element (summary height + content height)

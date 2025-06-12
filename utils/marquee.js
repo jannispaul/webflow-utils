@@ -14,10 +14,15 @@
 // - data-marquee-hover: pause on hover (default is false)
 // - data-marquee-direction: "reverse" (default is normal)
 
+// Marquee effect
 document.addEventListener("DOMContentLoaded", () => {
   const marquees = document.querySelectorAll("[data-marquee-element='list']");
 
   marquees.forEach((marqueeList) => {
+    // Skip if already initialized
+    if (marqueeList.dataset.marqueeInitialized === "true") return;
+    marqueeList.dataset.marqueeInitialized = "true";
+
     const speed = marqueeList.dataset.marqueeSpeed || "40";
     const pauseOnHover = marqueeList.dataset.marqueeHover === "pause";
     const direction = marqueeList.dataset.marqueeDirection === "reverse" ? "reverse" : "normal";
@@ -55,11 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const style = document.createElement("style");
       style.id = "marquee-style";
       style.innerHTML = `
-        @keyframes marquee-scroll {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `;
+          @keyframes marquee-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `;
       document.head.appendChild(style);
     }
 

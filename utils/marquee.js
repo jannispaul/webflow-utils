@@ -29,14 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const direction = marqueeList.dataset.marqueeDirection === "reverse" ? "reverse" : "normal";
     const wrapper = marqueeList.parentElement;
 
-    // Required styles
+    // Apply wrapper styles
     wrapper.style.overflow = "hidden";
     wrapper.style.position = "relative";
+
+    // Setup marquee list styles
     marqueeList.style.display = "flex";
     marqueeList.style.flexWrap = "nowrap";
     marqueeList.style.willChange = "transform";
 
-    // Safari-friendly item styles
+    // Apply safe styles to children
     Array.from(marqueeList.children).forEach((child) => {
       child.style.flex = "0 0 auto";
       child.style.minWidth = "0";
@@ -99,12 +101,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function activateMarquee() {
       let speed = getResponsiveSpeed(marqueeList);
       marqueeList.style.animation = "none";
-      void marqueeList.offsetWidth; // force reflow
+      void marqueeList.offsetWidth; // trigger reflow
 
       const firstClone = marqueeList.children[marqueeList.children.length / 2];
       const scrollWidth = firstClone.offsetLeft;
 
-      const animName = `marquee-scroll-px-${index}-${speed}`;
+      const animName = `marquee-scroll-${index}-${scrollWidth}-${speed}`;
       const existingStyle = document.getElementById(`style-${animName}`);
       if (existingStyle) existingStyle.remove();
 
@@ -112,8 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
       style.id = `style-${animName}`;
       style.textContent = `
           @keyframes ${animName} {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-${scrollWidth}px); }
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-${scrollWidth}px, 0, 0); }
           }
         `;
       document.head.appendChild(style);
@@ -121,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
       marqueeList.style.animation = `${animName} ${speed}s linear infinite ${direction}`;
     }
 
-    // Optional: handle resize to recalculate speed & animation
     window.addEventListener("resize", () => {
       marqueeList.dataset.marqueeInitialized = "false";
       marqueeList.style.animation = "none";

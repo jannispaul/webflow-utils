@@ -188,15 +188,18 @@ Code adapted from: https://css-tricks.com/how-to-animate-the-details-element-usi
 
 ## Marquee
 
-Marquee script to animate list. Uses CSS animations with some improvement needed for Safari. No dependencies.
+Marquee script to animate list. Uses CSS animations with some improvements needed for Safari. No dependencies.
 
 **Required attributes:**
 
-- `data-marquee-element="list"` On the list element to be animated. **Don`t** use `grid` but `flex` as the contained items get duplicated.
+- `data-marquee-element="list"` On the list element to be animated.
 
 **Optional attributes:**
 
 - `data-marquee-speed="40"` speed of the marquee in seconds (default is 40)
+- `data-marquee-speed-tablet="20"` speed of the marquee on tablet 991px and down
+- `data-marquee-speed-landscape="10"` speed of the marquee on landscape 767px and down
+- `data-marquee-speed-mobile="5"` speed of the marquee on mobile 479px and down
 - `data-marquee-hover="pause"` to pause on hover (default is false)
 - `data-marquee-direction="reverse"` to reverse the animation (default is right to left)
 
@@ -205,7 +208,7 @@ Example html:
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/marquee.js"></script>
 
-<div data-marquee-element="list" data-marquee-speed="40" class="marquee_list">
+<div data-marquee-element="list" data-marquee-speed="30" data-marquee-speed-landscape="50" class="marquee_list">
   <img src="" />
   <img src="" />
   <img src="" />

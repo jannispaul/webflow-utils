@@ -11,6 +11,9 @@
 
 // Optional attributes:
 // - data-marquee-speed: speed of the marquee (default is 40)
+// - data-marquee-speed-tablet: speed of the marquee on tablet 991px and down
+// - data-marquee-speed-landscape: speed of the marquee on landscape 767px and down
+// - data-marquee-speed-mobile: speed of the marquee on mobile 479px and down
 // - data-marquee-hover: pause on hover (default is false)
 // - data-marquee-direction: "reverse" (default is normal)
 
@@ -18,34 +21,35 @@
 document.addEventListener("DOMContentLoaded", () => {
   const marquees = document.querySelectorAll("[data-marquee-element='list']");
 
-  marquees.forEach((marqueeList) => {
-    // Skip if already initialized
+  marquees.forEach((marqueeList, index) => {
     if (marqueeList.dataset.marqueeInitialized === "true") return;
     marqueeList.dataset.marqueeInitialized = "true";
 
-    const speed = marqueeList.dataset.marqueeSpeed || "40";
     const pauseOnHover = marqueeList.dataset.marqueeHover === "pause";
     const direction = marqueeList.dataset.marqueeDirection === "reverse" ? "reverse" : "normal";
     const wrapper = marqueeList.parentElement;
 
-    // Ensure wrapper has required styles
+    // Required styles
     wrapper.style.overflow = "hidden";
     wrapper.style.position = "relative";
-
-    // Ensure marqueeList is one long horizontal line
     marqueeList.style.display = "flex";
     marqueeList.style.flexWrap = "nowrap";
     marqueeList.style.willChange = "transform";
-    marqueeList.style.animation = `marquee-scroll ${speed}s linear infinite ${direction}`;
 
-    // Duplicate only the children
+    // Safari-friendly item styles
+    Array.from(marqueeList.children).forEach((child) => {
+      child.style.flex = "0 0 auto";
+      child.style.minWidth = "0";
+      child.style.boxSizing = "border-box";
+    });
+
+    // Duplicate children
     const children = Array.from(marqueeList.children);
     children.forEach((child) => {
       const clone = child.cloneNode(true);
       marqueeList.appendChild(clone);
     });
 
-    // Pause on hover if needed
     if (pauseOnHover) {
       wrapper.addEventListener("mouseenter", () => {
         marqueeList.style.animationPlayState = "paused";
@@ -55,20 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Inject keyframes once
-    if (!document.getElementById("marquee-style")) {
-      const style = document.createElement("style");
-      style.id = "marquee-style";
-      style.innerHTML = `
-          @keyframes marquee-scroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `;
-      document.head.appendChild(style);
-    }
-
-    // Handle lazy image loading
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
@@ -77,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (images.length === 0) {
           activateMarquee();
         } else {
-          let loadedCount = 0;
+          let loaded = 0;
           images.forEach((img) => {
             img.removeAttribute("loading");
             img.style.willChange = "transform";
@@ -87,8 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
           });
 
           function onImageLoad() {
-            loadedCount++;
-            if (loadedCount === images.length) activateMarquee();
+            loaded++;
+            if (loaded === images.length) activateMarquee();
           }
         }
 
@@ -98,10 +88,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
     observer.observe(wrapper);
 
-    function activateMarquee() {
-      marqueeList.style.animation = "none";
-      void marqueeList.offsetWidth; // trigger reflow
-      marqueeList.style.animation = `marquee-scroll ${speed}s linear infinite ${direction}`;
+    function getResponsiveSpeed(el) {
+      const w = window.innerWidth;
+      if (w <= 479 && el.dataset.marqueeSpeedMobile) return parseFloat(el.dataset.marqueeSpeedMobile);
+      if (w <= 767 && el.dataset.marqueeSpeedLandscape) return parseFloat(el.dataset.marqueeSpeedLandscape);
+      if (w <= 991 && el.dataset.marqueeSpeedTablet) return parseFloat(el.dataset.marqueeSpeedTablet);
+      return parseFloat(el.dataset.marqueeSpeed || "40");
     }
+
+    function activateMarquee() {
+      let speed = getResponsiveSpeed(marqueeList);
+      marqueeList.style.animation = "none";
+      void marqueeList.offsetWidth; // force reflow
+
+      const firstClone = marqueeList.children[marqueeList.children.length / 2];
+      const scrollWidth = firstClone.offsetLeft;
+
+      const animName = `marquee-scroll-px-${index}-${speed}`;
+      const existingStyle = document.getElementById(`style-${animName}`);
+      if (existingStyle) existingStyle.remove();
+
+      const style = document.createElement("style");
+      style.id = `style-${animName}`;
+      style.textContent = `
+          @keyframes ${animName} {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-${scrollWidth}px); }
+          }
+        `;
+      document.head.appendChild(style);
+
+      marqueeList.style.animation = `${animName} ${speed}s linear infinite ${direction}`;
+    }
+
+    // Optional: handle resize to recalculate speed & animation
+    window.addEventListener("resize", () => {
+      marqueeList.dataset.marqueeInitialized = "false";
+      marqueeList.style.animation = "none";
+      void marqueeList.offsetWidth;
+      marqueeList.dataset.marqueeInitialized = "true";
+      activateMarquee();
+    });
   });
 });

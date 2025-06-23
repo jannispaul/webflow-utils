@@ -214,3 +214,25 @@ Example html:
   <img src="" />
 </div>
 ```
+
+## Number counter
+
+Script to animate number count up.
+
+**Required attributes:**
+
+- `data-counter-element="counter"` put on the counter element
+
+**Optional attributes:**
+
+- `data-counter-start="start-value"` put on the counter element
+- `data-counter-end="end-value"` put on the counter element
+- `data-counter-duration="duration-in-miliseconds"` put on the counter element
+- `data-counter-threshold="25"` element visible when 25% of viewport height from top
+- `data-counter-locale="en-US"` locale for number formatting
+
+```html
+<script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/number-counter.js"></script>
+
+<div data-counter-element="counter" data-counter-start="100" data-counter-end="200" data-counter-duration="1000" data-counter-threshold="25" data-counter-locale="en-US">1234</div>
+```

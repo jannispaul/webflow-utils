@@ -1,253 +1,157 @@
-// Import the dotLottie web component from the latest package
-// Docs: https://developers.lottiefiles.com/docs/dotlottie-player/dotlottie-wc/
-// This is not documented anywhere:
-// To get the dotlottie instance select the dotlottie-wc element and access the dotLottie property
+// import { DotLottie } from "https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web@0.49.0/+esm";
+import { DotLottie } from "https://esm.sh/@lottiefiles/dotlottie-web";
 
-import lottiefilesdotlottieWc from "https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-wc@0.6.4/+esm";
-
-//www.npmjs.com/package/@lottiefiles/dotlottie-wc
 document.addEventListener("DOMContentLoaded", async () => {
-  // Map to store DotLottie instances for each element
+  const componentSelector = ".dotlottie-canvas";
   const lottieInstances = new Map();
-  const componentSelector = "dotlottie-wc";
+  const language = document.documentElement.lang || "en";
 
-  // Helper to convert data attribute strings to appropriate types
-  const parseLottieAttribute = (element, attrName, defaultValue, type) => {
-    // First check for the attribute directly (for non-"data-" prefixed attributes)
-    let value = element.getAttribute(attrName);
-    if (value === null) {
-      // Then check for the data attribute version
-      const dataAttrName = attrName.replace(/^data-/, "");
-      value = element.dataset[dataAttrName];
-    }
+  const parseAttr = (el, name, def, type = "string") => {
+    const val = el.getAttribute(name) ?? el.dataset[name.replace(/^data-/, "")];
+    if (val == null) return def;
+    if (type === "boolean") return val === "true" || val === "1" || val === "";
+    if (type === "number") return parseFloat(val);
+    return val;
+  };
 
-    if (value === undefined || value === null) return defaultValue;
+  const allLottieElements = [...document.querySelectorAll('div[data-animation-type="lottie"]')];
 
-    switch (type) {
-      case "boolean":
-        return value === "true" || value === "1" || value === "";
-      case "number":
-        return parseFloat(value);
-      case "string":
-      default:
-        return value;
+  allLottieElements.forEach((el) => {
+    const langSrc = el.getAttribute(`data-src-${language}`);
+    if (langSrc) el.setAttribute("data-src", langSrc);
+  });
+
+  const [lazyLotties, eagerLotties] = allLottieElements.reduce(([lazy, eager], el) => (el.dataset.loading === "lazy" ? [[...lazy, el], eager] : [lazy, [...eager, el]]), [[], []]);
+
+  const setupLottie = async (container) => {
+    if (container.querySelector(componentSelector)) return;
+
+    const path = container.dataset.src;
+    if (!path) return console.warn("Missing data-src:", container);
+
+    const autoplay = parseAttr(container, "data-autoplay", false, "boolean");
+    const loop = parseAttr(container, "data-loop", false, "boolean");
+    const speed = parseAttr(container, "data-speed", 1, "number");
+    const direction = parseAttr(container, "data-direction", 1, "number");
+    const playOnce = parseAttr(container, "data-play-once", false, "boolean");
+    const fit = parseAttr(container, "data-fit", "cover");
+    const alignX = parseAttr(container, "data-align-x", "center", "number");
+    const alignY = parseAttr(container, "data-align-y", "center", "number");
+    const align = [alignX, alignY];
+
+    container.querySelector("img")?.remove();
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "dotlottie-canvas";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.dataset.playOnce = playOnce;
+    canvas.dataset.autoplay = autoplay;
+
+    canvas.setAttribute("data-play-once", playOnce);
+    canvas.setAttribute("data-autoplay", autoplay);
+    container.appendChild(canvas);
+
+    try {
+      const instance = new DotLottie({
+        autoplay: false,
+        loop: playOnce ? false : loop,
+        canvas,
+        src: path,
+        layout: {
+          fit,
+          align,
+        },
+      });
+
+      //   instance.setLayout({ fit, align });
+      if (speed !== 1) instance.setSpeed(speed);
+      if (direction === -1) instance.setMode("reverse");
+
+      if (playOnce) {
+        instance.addEventListener("complete", () => {
+          instance.pause();
+          instance.setFrame(0);
+        });
+      }
+
+      instance.addEventListener("load", () => {
+        const isVisible = container.getBoundingClientRect().top <= window.innerHeight;
+        if (autoplay && isVisible) instance.play();
+      });
+
+      lottieInstances.set(container, instance);
+    } catch (err) {
+      console.error("Failed to setup lottie:", path, err);
     }
   };
 
-  // 1. Language-based source update for ALL Lottie elements
-  const language = document.querySelector("html").lang || "en";
-  const allLottieDivElements = document.querySelectorAll('div[data-animation-type="lottie"]');
+  const handleVisibility = (container, isVisible) => {
+    const canvas = container.querySelector(componentSelector);
+    const instance = lottieInstances.get(container);
+    if (!canvas || !instance) return;
 
-  allLottieDivElements.forEach((element) => {
-    const langSrc = element.getAttribute(`data-src-${language}`);
-    if (langSrc) {
-      element.setAttribute("data-src", langSrc); // Update the main data-src
-    }
-  });
+    const autoplay = canvas.getAttribute("data-autoplay") === "true";
+    const playOnce = canvas.getAttribute("data-play-once") === "true";
 
-  // Get all lazy load lottie elements
-  const lazyLotties = [...document.querySelectorAll('div[data-loading="lazy"][data-animation-type="lottie"]')];
+    if (isVisible && autoplay) {
+      if (instance.isLoaded) {
+        if (playOnce && instance.isPaused) instance.setFrame(0);
 
-  // Get non-lazy lotties (should load immediately)
-  const eagerLotties = [...allLottieDivElements].filter((el) => !el.hasAttribute("data-loading") || el.dataset.loading !== "lazy");
-
-  // Helper to check if the DotLottie instance has been created and loaded
-  //   const checkLoaded = (lottieEl) => {
-  //     const player = lottieEl.querySelector(componentSelector);
-  //     return player && player.load && player.load.fulfilled;
-  //   };
-
-  // Function to set up a lottie element with a dotlottie-player component
-  async function setupLottieElement(lottieEl) {
-    if (lottieEl.querySelector(componentSelector)) {
-      // Already set up
-      return lottieEl.querySelector(componentSelector);
-    }
-
-    const path = lottieEl.dataset.src;
-    if (!path) {
-      console.warn("No 'data-src' found for lottie element:", lottieEl);
-      return null;
-    }
-
-    // Read all properties from data attributes
-    const autoplay = parseLottieAttribute(lottieEl, "data-autoplay", false, "boolean");
-    const loop = parseLottieAttribute(lottieEl, "data-loop", false, "boolean");
-    const speed = parseLottieAttribute(lottieEl, "data-speed", 1, "number");
-    const direction = parseLottieAttribute(lottieEl, "data-direction", 1, "number");
-    const renderer = parseLottieAttribute(lottieEl, "data-renderer", "svg", "string");
-    const playOnce = parseLottieAttribute(lottieEl, "data-play-once", false, "boolean");
-    const fit = parseLottieAttribute(lottieEl, "data-fit", "contain", "string");
-    const align = parseLottieAttribute(lottieEl, "data-align", "center", "string");
-
-    // Remove any placeholder img that Webflow might inject
-    const placeholderImg = lottieEl.querySelector("img");
-    if (placeholderImg) placeholderImg.remove();
-
-    // Create dotlottie-player element
-    const player = document.createElement(componentSelector);
-    player.src = path;
-    player.autoplay = false; // We'll control playback with the IntersectionObserver
-    player.loop = playOnce ? false : loop;
-    player.speed = speed;
-    player.direction = direction;
-    player.renderer = renderer;
-    player.style.width = "100%";
-    player.style.height = "100%";
-
-    // Set layout fit
-    // player.setLayout({
-    //   fit: "cover", // Change 'contain' to your desired fit value (e.g., 'cover', 'fill', etc.)
-    // });
-
-    // Store this configuration
-    player.setAttribute("fit", fit);
-    player.setAttribute("align", align);
-    player.setAttribute("data-play-once", playOnce);
-    player.setAttribute("data-should-autoplay", autoplay);
-
-    // Add the player to the container
-    lottieEl.appendChild(player);
-
-    // Wait for the player to be ready
-    await new Promise((resolve) => {
-      if (player.load && player.load.fulfilled) {
-        resolve();
+        instance.play();
       } else {
-        player.addEventListener("ready", resolve, { once: true });
+        instance.addEventListener(
+          "load",
+          () => {
+            if (playOnce && instance.isPaused) instance.setFrame(0);
+            instance.play();
+          },
+          { once: true }
+        );
       }
-    });
-
-    // Add complete event listener for playOnce logic
-    if (playOnce) {
-      player.addEventListener("complete", () => {
-        player.pause();
-        // Optionally reset to first frame
-        player.seek("0%");
-      });
+    } else if (!playOnce && instance.isPlaying) {
+      instance.pause();
     }
+  };
 
-    // Store reference
-    lottieInstances.set(lottieEl, player);
+  const visibilityObserver = new IntersectionObserver((entries) => entries.forEach((e) => handleVisibility(e.target, e.isIntersecting)), { threshold: 0.1 });
 
-    return player;
+  for (const el of eagerLotties) {
+    await setupLottie(el);
+    visibilityObserver.observe(el);
+    handleVisibility(el, el.getBoundingClientRect().top <= window.innerHeight);
   }
 
-  // Handle visibility control of a lottie element
-  function handleLottieVisibility(lottieWrap, isVisible) {
-    const lottieEl = lottieWrap.querySelector(componentSelector);
-    if (!lottieEl) return;
-    const lottiePlayer = lottieEl.dotLottie;
-
-    const playOnce = lottieEl.getAttribute("data-play-once") === "true";
-    const shouldAutoplay = lottieEl.getAttribute("data-should-autoplay") === "true";
-    if (isVisible) {
-      // Only play if it should autoplay or was explicitly set to autoplay
-      if (shouldAutoplay) {
-        // If this animation is set to play once and has completed, reset it
-        if (playOnce && lottiePlayer.isStopped) {
-          lottiePlayer.setFrame("0");
-        }
-        lottiePlayer.play();
-        console.log("Lottie", lottieEl, lottiePlayer, lottiePlayer.isStopped);
-        lottiePlayer.addEventListener("load", () => {
-          console.log("Lottie loaded:", lottieEl, lottiePlayer);
-          lottiePlayer.play();
-        });
-      }
-    } else {
-      // Only pause if it's playing and not set to play once
-      // (if it's playing once, let it finish)
-      if (lottiePlayer.isPlaying && !playOnce) {
-        lottiePlayer.pause();
-      }
-    }
-  }
-
-  // Set up eager loading lottie elements right away
-  eagerLotties.forEach(async (lottieWrap) => {
-    const lottieEl = await setupLottieElement(lottieWrap);
-    // Auto play if element is visible and has autoplay enabled
-    if (lottieEl && lottieEl.getAttribute("data-should-autoplay") === "true") {
-      const rect = lottieWrap.getBoundingClientRect();
-      const isVisible = rect.top <= window.innerHeight && rect.bottom >= 0;
-      if (isVisible) {
-        lottieEl.dotLottie.play();
-      }
-    }
-  });
-
-  // Set up intersection observers
-  // Observer for when elements are in the viewport - for playback
-  const visibilityObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        handleLottieVisibility(entry.target, entry.isIntersecting);
-      });
-    },
-    { threshold: 0.1 } // Play when at least 10% visible
-  );
-
-  if (lazyLotties.length > 0) {
-    // Observer for when elements are near the viewport - for loading
-    const lazyLoadObserver = new IntersectionObserver(
+  if (lazyLotties.length) {
+    const lazyObserver = new IntersectionObserver(
       (entries, observer) => {
-        entries.forEach(async (entry) => {
-          if (entry.isIntersecting) {
-            const lottieEl = entry.target;
-            await setupLottieElement(lottieEl);
-            observer.unobserve(lottieEl); // Stop observing for loading
-
-            // Once loaded, start observing for visibility/playback
-            visibilityObserver.observe(lottieEl);
-          }
+        entries.forEach(async (e) => {
+          if (!e.isIntersecting) return;
+          const el = e.target;
+          await setupLottie(el);
+          observer.unobserve(el);
+          visibilityObserver.observe(el);
+          handleVisibility(el, true);
         });
       },
-      { rootMargin: "1250px" } // Load when 1250px away from viewport
+      { rootMargin: "1250px" }
     );
-
-    // Start observing all lazy lottie elements for loading
-    lazyLotties.forEach((lottieEl) => {
-      lazyLoadObserver.observe(lottieEl);
-    });
+    lazyLotties.forEach((el) => lazyObserver.observe(el));
   }
 
-  // Also observe eager lotties for visibility changes
-  eagerLotties.forEach((lottieEl) => {
-    visibilityObserver.observe(lottieEl);
-  });
-
-  // --- New Logic for handling display: none elements ---
-  const allObservableLotties = [...allLottieDivElements]; // Combine eager and lazy lotties for mutation observing
-
-  allObservableLotties.forEach((lottieWrap) => {
-    const mutationObserver = new MutationObserver((mutationsList) => {
-      for (const mutation of mutationsList) {
-        if (mutation.type === "attributes" && mutation.attributeName === "style") {
-          const currentDisplay = window.getComputedStyle(lottieWrap).display;
-
-          // If the element was hidden and is now visible
-          if (currentDisplay !== "none" && mutation.oldValue && mutation.oldValue.includes("display: none")) {
-            // Re-check visibility and potentially play
-            const lottieEL = lottieInstances.get(lottieWrap);
-            if (lottieEL && lottieEL.getAttribute("data-should-autoplay") === "true") {
-              const rect = lottieWrap.getBoundingClientRect();
-              const isVisible = rect.top <= window.innerHeight && rect.bottom >= 0;
-              if (isVisible) {
-                lottieEL.dotLottie.play();
-              }
-            }
-            // Ensure the IntersectionObserver is already watching this element
-            // This is handled by observing all lotties (eagerly or after lazy load)
-            // However, if the element was display:none from the start, the IntersectionObserver
-            // might not have fired yet. A quick re-observation might be useful here if needed,
-            // but the current setup should eventually catch it.
+  allLottieElements.forEach((el) => {
+    new MutationObserver((mutations) => {
+      mutations.forEach((m) => {
+        if (m.attributeName === "style" && m.oldValue?.includes("display: none")) {
+          const canvas = el.querySelector(componentSelector);
+          const instance = lottieInstances.get(el);
+          console.log("mutation triggered", canvas, instance);
+          if (canvas?.getAttribute("data-autoplay") === "true" && instance) {
+            const visible = el.getBoundingClientRect().top <= window.innerHeight;
+            if (visible) instance.play();
           }
         }
-      }
-    });
-
-    // Start observing the style attribute for changes
-    mutationObserver.observe(lottieWrap, { attributes: true, attributeFilter: ["style"], attributeOldValue: true });
+      });
+    }).observe(el, { attributes: true, attributeFilter: ["style"], attributeOldValue: true });
   });
 });

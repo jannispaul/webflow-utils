@@ -139,19 +139,77 @@ document.addEventListener("DOMContentLoaded", async () => {
     lazyLotties.forEach((el) => lazyObserver.observe(el));
   }
 
-  allLottieElements.forEach((el) => {
-    new MutationObserver((mutations) => {
-      mutations.forEach((m) => {
-        if (m.attributeName === "style" && m.oldValue?.includes("display: none")) {
-          const canvas = el.querySelector(componentSelector);
-          const instance = lottieInstances.get(el);
-          console.log("mutation triggered", canvas, instance);
-          if (canvas?.getAttribute("data-autoplay") === "true" && instance) {
-            const visible = el.getBoundingClientRect().top <= window.innerHeight;
-            if (visible) instance.play();
-          }
+  const debounceDelay = 100; // ms debounce for performance
+  const debounceMap = new Map();
+
+  function debounceCheck(el, fn, delay) {
+    if (debounceMap.has(el)) {
+      clearTimeout(debounceMap.get(el));
+    }
+    debounceMap.set(
+      el,
+      setTimeout(() => {
+        fn(el);
+        debounceMap.delete(el);
+      }, delay)
+    );
+  }
+
+  function isVisibleToUser(el) {
+    if (!el) return false;
+    if (!(el instanceof Element)) return false;
+
+    let current = el;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") {
+        return false;
+      }
+      current = current.parentElement;
+    }
+
+    if (el.offsetWidth === 0 && el.offsetHeight === 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function checkAndPlay(el) {
+    setTimeout(() => {
+      if (isVisibleToUser(el)) {
+        const canvas = el.querySelector(componentSelector);
+        const instance = lottieInstances.get(el);
+        if (canvas?.getAttribute("data-autoplay") === "true" && instance) {
+          instance.play();
+          console.log("playing", el);
         }
+      }
+    }, 20);
+  }
+
+  // Observe style changes on element and ancestors
+  allLottieElements.forEach((el) => {
+    const observeElAndParents = (node) => {
+      if (!node || node === document.body) return;
+      new MutationObserver(() => {
+        checkAndPlay(el);
+      }).observe(node, {
+        attributes: true,
+        attributeFilter: ["style", "class"], // <-- watch class changes too
       });
-    }).observe(el, { attributes: true, attributeFilter: ["style"], attributeOldValue: true });
+      observeElAndParents(node.parentElement);
+    };
+    observeElAndParents(el);
+
+    checkAndPlay(el);
   });
+
+  // Also trigger visibility checks on scroll and resize (debounced)
+  const onScrollResize = () => {
+    allLottieElements.forEach((el) => debounceCheck(el, checkAndPlay, debounceDelay));
+  };
+
+  window.addEventListener("scroll", onScrollResize, { passive: true });
+  window.addEventListener("resize", onScrollResize);
 });

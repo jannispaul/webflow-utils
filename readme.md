@@ -58,7 +58,7 @@ Create html `dialog` from divs with data attributes.
 
 - `data-dialog-close` for close button inside the dialog, to close the parent dialog on click.
 - `data-dialog-trigger="dialog-name"` to open dialog. e.g. Button click
-- `data-dialog-dealy="delay-time"` to automatically open dialog after delay set in seconds. Opens once per session. Set on dialog element.
+- `data-dialog-delay="delay-time"` to automatically open dialog after delay set in seconds. Opens once per session. Set on dialog element.
 - `data-dialog-exit-intent` to automatically open the dialog on exit intent. Set on the dialog element
 - `data-dialog-scroll="dialog-name"` to automatically open the dialog when an element gets scrolled into the viewport. Set on the trigger element.
 - `data-dialog-cooldown="cooldown-time"` Time between dialog triggers in seconds, or as `day, week, month`. Set on dialog element.
@@ -182,6 +182,12 @@ Example html:
     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat. Aenean faucibus nibh et justo cursus id rutrum lorem imperdiet. Nunc ut sem vitae risus tristique posuere.</p>
   </div>
 </details>
+```
+
+```css
+details summary::-webkit-details-marker {
+  display:none;
+}
 ```
 
 Code adapted from: https://css-tricks.com/how-to-animate-the-details-element-using-waapi/

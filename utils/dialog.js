@@ -1,220 +1,292 @@
 // Script to create dialogs on website
 // Docs for dialog: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
-// Attributes needed:
-// data-dialog-id="dialog-name" on dialog content element, has to be unique
-// data-dialog-close on child of dialog to close parent dialog
 
-// Optional attributes:
-// data-dialog-trigger="trigger-name" on elements that should trigger the dialog on click
-// data-dialog-delay="delay-time" Delay trigger time in seconds on the dialog element
-// data-dialog-exit-intent Allow dialog to trigger on exit intent on the dialog element
-// data-dialog-scroll="dialog-name" on an element to trigger the dialog when element gets scrolled into the viewport
-// data-dialog-cooldown="cooldown-time" Cooldown time between dialog triggers in seconds, or as day, week, month. Set on dialog
+class DialogManager {
+  // --- Constants and Configuration ---
+  static #ATTRIBUTES = {
+      ID: "data-dialog-id",
+      TRIGGER: "data-dialog-trigger",
+      DELAY: "data-dialog-delay",
+      EXIT_INTENT: "data-dialog-exit-intent",
+      SCROLL: "data-dialog-scroll",
+      COOLDOWN: "data-dialog-cooldown",
+      CLOSE: "data-dialog-close",
+  };
 
-// Events:
-// dialogsCreated is dispatched when all dialogs have been created and are ready to use
-// dialogOpened is dispatched when a dialog is opened. event.detail.element = dialog element
-
-// Customize backdrop color and opacity with CSS ::backdrop{ background: rgba(0,0,0,0.5); }
-
-// Roadmap
-// 1. Prevent open multiple dialogs -> Not necessarly a unwanted.
-
-document.addEventListener("DOMContentLoaded", async function () {
-  console.log("Dialog script loaded");
-  let dialogContentElements = document.querySelectorAll("[data-dialog-id]");
-  let triggerDialogElements = document.querySelectorAll("[data-dialog-trigger]");
-
-  // Create dialog from element and append it to body
-  function createDialog(element) {
-    let dialog = document.createElement("dialog");
-    dialog.append(element);
-    dialog.setAttribute("data-dialog-id", element.getAttribute("data-dialog-id"));
-    element.removeAttribute("data-dialog-id");
-
-    // Transfer all data-dialog-* attributes to dialog element
-    Array.from(element.attributes)
-      .filter((attr) => attr.name.startsWith("data-dialog-"))
-      .forEach((attr) => {
-        dialog.setAttribute(attr.name, attr.value);
-        element.removeAttribute(attr.name);
-      });
-
-    document.body.append(dialog);
-    console.log("appending dialog", dialog);
-  }
-
-  async function addDialogs() {
-    dialogContentElements.forEach((element) => {
-      createDialog(element);
-    });
-    console.log("add dialogs");
-    return Promise.resolve();
-  }
-
-  await addDialogs().then(() => {
-    initializeAllTriggers();
-    window.dispatchEvent(new CustomEvent("dialogsCreated"));
-    console.log("Done");
-  });
-
-  function initializeAllTriggers() {
-    const dialogs = document.querySelectorAll("dialog[data-dialog-id]");
-    dialogs.forEach((dialog) => {
-      // Initialize time-based trigger
-      if (dialog.hasAttribute("data-dialog-delay")) {
-        initializeTimeTrigger(dialog);
-      }
-      // Initialize scroll trigger
-      const dialogName = dialog.getAttribute("data-dialog-id");
-      const scrollTrigger = document.querySelector(`[data-dialog-scroll="${dialogName}"]`);
-      if (scrollTrigger) {
-        initializeScrollTrigger(dialog, scrollTrigger);
-      }
-      // Initialize exit intent trigger
-      if (dialog.hasAttribute("data-dialog-exit-intent")) {
-        initializeExitIntentTrigger(dialog);
-      }
-    });
-  }
-
-  function initializeTimeTrigger(dialog) {
-    const dialogName = dialog.getAttribute("data-dialog-id");
-    const delay = parseInt(dialog.getAttribute("data-dialog-delay")) * 1000;
-    const cooldown = getCoolDownTime(dialog);
-
-    if (canTriggerDialog(dialogName, cooldown)) {
-      setTimeout(() => {
-        // Check if dialog has been opened by another trigger
-        canTriggerDialog(dialogName, cooldown) && openDialog(dialog);
-      }, delay);
-    }
-  }
-  function getCoolDownTime(dialog) {
-    // Default cooldown times day, week, month in seconds
-    const cooldownTimes = {
+  // Cooldown times in seconds, used for string lookup
+  static #COOLDOWN_SECONDS = {
       day: 86400,
       week: 604800,
       month: 2592000,
-    };
+  };
 
-    // Check if cooldown time is set in seconds or as a string (day, week, month)
-    const cooldown = cooldownTimes[dialog.getAttribute("data-dialog-cooldown")] || parseInt(dialog.getAttribute("data-dialog-cooldown")) * 1000 || 0;
+  // --- State and Initialization ---
+  #dialogContentElements;
+  #triggerDialogElements;
+  #lastFocusedElement = null; // New: Store the element that triggered the dialog
 
-    return cooldown;
+  constructor() {
+      this.#dialogContentElements = document.querySelectorAll(`[${DialogManager.#ATTRIBUTES.ID}]`);
+      this.#triggerDialogElements = document.querySelectorAll(`[${DialogManager.#ATTRIBUTES.TRIGGER}]`);
+
+      document.addEventListener("DOMContentLoaded", this.init.bind(this));
+      this.#createDialogStyle();
+      console.log("Dialog script initialized");
   }
 
-  function initializeScrollTrigger(dialog, triggerElement) {
-    const dialogName = dialog.getAttribute("data-dialog-id");
-    const cooldown = getCoolDownTime(dialog);
+  async init() {
+      await this.#addDialogs();
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && canTriggerDialog(dialogName, cooldown)) {
-            openDialog(dialog);
-            observer.unobserve(triggerElement);
+      const dialogs = document.querySelectorAll(`dialog[${DialogManager.#ATTRIBUTES.ID}]`);
+
+      this.#initializeDialogCloseHandlers(dialogs);
+      this.#initializeAllTriggers(dialogs);
+      this.#initializeClickTriggers();
+
+      window.dispatchEvent(new CustomEvent("dialogs-created"));
+      console.log("Dialogs ready.");
+  }
+
+  // --- Dialog Creation and Structure ---
+
+  #createDialog(element) {
+      let dialog = document.createElement("dialog");
+      const dialogId = element.getAttribute(DialogManager.#ATTRIBUTES.ID);
+
+      dialog.append(element);
+      
+      dialog.setAttribute(DialogManager.#ATTRIBUTES.ID, dialogId);
+      element.removeAttribute(DialogManager.#ATTRIBUTES.ID);
+
+      // Transfer all data-dialog-* attributes from content element to the <dialog>
+      [...element.attributes]
+          .filter((attr) => attr.name.startsWith("data-dialog-"))
+          .forEach((attr) => {
+              dialog.setAttribute(attr.name, attr.value);
+              element.removeAttribute(attr.name);
+          });
+
+      document.body.append(dialog);
+  }
+
+  async #addDialogs() {
+      this.#dialogContentElements.forEach((element) => {
+          this.#createDialog(element);
+      });
+      return Promise.resolve();
+  }
+
+  // --- Helper Functions ---
+
+  #getCoolDownTime(dialog) {
+      const cooldownAttr = dialog.getAttribute(DialogManager.#ATTRIBUTES.COOLDOWN);
+      if (!cooldownAttr) return 0;
+
+      if (DialogManager.#COOLDOWN_SECONDS[cooldownAttr]) {
+          return DialogManager.#COOLDOWN_SECONDS[cooldownAttr] * 1000;
+      }
+
+      const seconds = parseInt(cooldownAttr);
+      return isNaN(seconds) ? 0 : seconds * 1000;
+  }
+
+  #canTriggerDialog(dialogName, cooldown) {
+      const lastOpenTime = localStorage.getItem(`${dialogName}_last_open`);
+      if (!lastOpenTime) return true;
+
+      const timeSinceLastOpen = Date.now() - parseInt(lastOpenTime);
+      return timeSinceLastOpen >= cooldown;
+  }
+
+  #isDialogOpen() {
+      return !!document.querySelector("dialog[open]");
+  }
+
+  // --- Trigger Initialization (unchanged) ---
+
+  #initializeAllTriggers(dialogs) {
+      dialogs.forEach((dialog) => {
+          const dialogName = dialog.getAttribute(DialogManager.#ATTRIBUTES.ID);
+          const cooldown = this.#getCoolDownTime(dialog);
+
+          if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.DELAY)) {
+              this.#initializeTimeTrigger(dialog, dialogName, cooldown);
           }
-        });
-      },
-      {
-        threshold: 0.5, // Trigger when 50% of element is visible
+          const scrollTrigger = document.querySelector(`[${DialogManager.#ATTRIBUTES.SCROLL}="${dialogName}"]`);
+          if (scrollTrigger) {
+              this.#initializeScrollTrigger(dialog, scrollTrigger, dialogName, cooldown);
+          }
+          if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.EXIT_INTENT)) {
+              this.#initializeExitIntentTrigger(dialog, dialogName, cooldown);
+          }
+      });
+  }
+
+  #initializeTimeTrigger(dialog, dialogName, cooldown) {
+      const delay = parseInt(dialog.getAttribute(DialogManager.#ATTRIBUTES.DELAY)) * 1000;
+
+      if (this.#canTriggerDialog(dialogName, cooldown)) {
+          setTimeout(() => {
+              this.#canTriggerDialog(dialogName, cooldown) && this.openDialog(dialog);
+          }, delay);
       }
-    );
-
-    observer.observe(triggerElement);
   }
 
-  function initializeExitIntentTrigger(dialog) {
-    const dialogName = dialog.getAttribute("data-dialog-id");
+  #initializeScrollTrigger(dialog, triggerElement, dialogName, cooldown) {
+      const observer = new IntersectionObserver(
+          (entries) => {
+              entries.forEach((entry) => {
+                  if (entry.isIntersecting && this.#canTriggerDialog(dialogName, cooldown)) {
+                      this.openDialog(dialog);
+                      observer.unobserve(triggerElement);
+                  }
+              });
+          },
+          { threshold: 0.5 }
+      );
+      observer.observe(triggerElement);
+  }
 
-    const cooldown = getCoolDownTime(dialog);
+  #initializeExitIntentTrigger(dialog, dialogName, cooldown) {
+      document.addEventListener("mouseout", (e) => {
+          if (e.clientY <= 0 && this.#canTriggerDialog(dialogName, cooldown)) {
+              this.openDialog(dialog);
+          }
+      });
+  }
 
-    document.addEventListener("mouseout", function (e) {
-      if (e.clientY <= 0 && canTriggerDialog(dialogName, cooldown)) {
-        openDialog(dialog);
+  #initializeClickTriggers() {
+      this.#triggerDialogElements.forEach((element) => {
+          element.addEventListener("click", () => {
+              const dialogName = element.getAttribute(DialogManager.#ATTRIBUTES.TRIGGER);
+              const dialog = document.querySelector(`dialog[${DialogManager.#ATTRIBUTES.ID}="${dialogName}"]`);
+              if (!dialog) return;
+              this.openDialog(dialog);
+          });
+      });
+  }
+
+  // --- Dialog Open/Close Logic ---
+
+  #initializeDialogCloseHandlers(dialogs) {
+      dialogs.forEach(dialog => {
+          dialog.addEventListener("click", (e) => {
+              if (e.target === dialog || e.target.closest(`[${DialogManager.#ATTRIBUTES.CLOSE}]`)) {
+                  // Check for target before calling close, allows animation reverse if needed
+                  dialog.close();
+              }
+          });
+          
+          dialog.addEventListener("close", () => {
+              // Restore focus for A11Y
+              if (this.#lastFocusedElement) {
+                  this.#lastFocusedElement.focus();
+                  this.#lastFocusedElement = null;
+              }
+              document.body.style.overflow = '';
+              window.dispatchEvent(new CustomEvent("dialog-closed", { detail: { element: dialog } }));
+          });
+      });
+  }
+
+  // Public method, accessible via window.dialogs.open(name)
+  openDialog(dialog) {
+      if (this.#isDialogOpen()) return;
+
+      // Save the currently focused element (the element that triggered the dialog)
+      this.#lastFocusedElement = document.activeElement;
+      
+      const dialogName = dialog.getAttribute(DialogManager.#ATTRIBUTES.ID);
+
+      dialog.showModal();
+      document.body.style.overflow = 'hidden';
+      
+      // Only set opened flag if dialog has cooldown attribute
+      if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.COOLDOWN)) {
+          localStorage.setItem(`${dialogName}_last_open`, Date.now().toString());
       }
-    });
+      
+      window.dispatchEvent(new CustomEvent("dialog-opened", { detail: { element: dialog } }));
   }
 
-  function canTriggerDialog(dialogName, cooldown) {
-    const lastOpenTime = localStorage.getItem(`${dialogName}_last_open`);
-    if (!lastOpenTime) return true;
-
-    const timeSinceLastOpen = Date.now() - parseInt(lastOpenTime);
-    return timeSinceLastOpen >= cooldown;
-  }
-
-  function isDialogOpen() {
-    const dialogs = document.querySelectorAll("dialog");
-    for (const dialog of dialogs) {
-      if (dialog.open) {
-        return true;
+  // Public method to close dialog by name (for external API)
+  closeDialog(dialogName) {
+      const dialog = document.querySelector(`dialog[${DialogManager.#ATTRIBUTES.ID}="${dialogName}"]`);
+      if (dialog) {
+          dialog.close();
+          return true;
       }
-    }
-    return false;
+      return false;
   }
 
-  function openDialog(dialog) {
-    if (isDialogOpen()) return;
+  // Public method to close all open dialogs
+  closeAllDialogs() {
+      document.querySelectorAll("dialog[open]").forEach(d => d.close());
+  }
 
-    const dialogName = dialog.getAttribute("data-dialog-id");
+  // --- Styling (unchanged) ---
 
-    dialog.addEventListener("click", (e) => {
-      if (e.target === dialog || e.target.closest("[data-dialog-close]")) {
-        dialog.close();
+  #createDialogStyle() {
+      let style = document.createElement("style");
+      style.innerHTML = `
+  
+          dialog {
+              border: none;
+              background: transparent;
+              padding: 0;
+              opacity: 0;
+              transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+              transform: translateY(2rem);
+          }
+          ::backdrop{ 
+              opacity: 0;
+              transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete;
+          }
+          dialog[open] {
+              opacity: 1;
+              transform: translateY(0rem);
+          }
+          dialog[open]::backdrop {
+              opacity: 1;
+          }
+          @starting-style {
+              dialog[open], dialog[open]::backdrop {
+              opacity: 0;
+              transform: translateY(2rem);
+              }
+          } 
+      `;
+      document.head.appendChild(style);
+  }
+}
+
+// Instantiate the manager
+const managerInstance = new DialogManager();
+
+// Expose a public API under window.dialogs
+window.dialogs = {
+  /**
+   * Programmatically opens a dialog by its data-dialog-id.
+   * @param {string} dialogName The value of the data-dialog-id attribute.
+   * @returns {boolean} True if the dialog was found and opened (or was already open), false otherwise.
+   */
+  open: (dialogName) => {
+      const dialog = document.querySelector(`dialog[${DialogManager.ATTRIBUTES.ID}="${dialogName}"]`);
+      if (dialog) {
+          managerInstance.openDialog(dialog);
+          return true;
       }
-    });
-
-    dialog.showModal();
-    localStorage.setItem(`${dialogName}_last_open`, Date.now().toString());
-    window.dispatchEvent(new CustomEvent("dialogOpened", { detail: { element: dialog } }));
-  }
-
-  // Click trigger handlers
-  triggerDialogElements.forEach((element) => {
-    element.addEventListener("click", () => {
-      const dialogName = element.getAttribute("data-dialog-trigger");
-      const dialog = document.querySelector(`[data-dialog-id="${dialogName}"]`);
-      if (!dialog) return;
-      openDialog(dialog);
-    });
-  });
-
-  // Create dialog styles
-  function createDialogStyle() {
-    let style = document.createElement("style");
-    style.innerHTML = `
-        body:has(dialog[open]) {
-            overflow: hidden;
-        }
-        dialog {
-            border: none;
-            background: transparent;
-            padding: 0;
-            opacity: 0;
-            transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            transform: translateY(2rem);
-        }
-        ::backdrop{ 
-            opacity: 0;
-            transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete;
-        }
-        dialog[open] {
-            opacity: 1;
-            transform: translateY(0rem);
-        }
-        dialog[open]::backdrop {
-            opacity: 1;
-        }
-        @starting-style {
-            dialog[open], dialog[open]::backdrop {
-            opacity: 0;
-            transform: translateY(2rem);
-            }
-        } 
-    `;
-    document.head.appendChild(style);
-  }
-  createDialogStyle();
-});
+      return false;
+  },
+  /**
+   * Programmatically closes a dialog by its data-dialog-id.
+   * @param {string} dialogName The value of the data-dialog-id attribute.
+   * @returns {boolean} True if the dialog was found and closed, false otherwise.
+   */
+  close: (dialogName) => managerInstance.closeDialog(dialogName),
+  
+  /**
+   * Closes all currently open dialogs.
+   */
+  closeAll: () => managerInstance.closeAllDialogs(),
+};

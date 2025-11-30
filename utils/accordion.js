@@ -9,6 +9,7 @@
 // Optional attributes
 // data-accordion-duration="600" -> duration in miliseconds
 // data-accordion-easing="cubic-bezier(0.37, 0, 0.63, 1)" -> custom easing. Default ease: https://easings.net/#easeInOutQuad
+// data-accordion-group="group-name" -> to group accordion elements together and have only one open at a time
 
 class Accordion {
   constructor(el) {

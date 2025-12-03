@@ -236,9 +236,11 @@ Script to animate number count up.
 - `data-counter-duration="duration-in-miliseconds"` put on the counter element
 - `data-counter-threshold="25"` element visible when 25% of viewport height from top
 - `data-counter-locale="en-US"` locale for number formatting
+- `data-counter-decimals="0"` number of decimals (decimal content must be set with .)
+- `data-counter-ease="easeOutExpo"` -> easing function
 
 ```html
 <script defer src="https://cdn.jsdelivr.net/gh/jannispaul/webflow-utils@latest/dist/number-counter.js"></script>
 
-<div data-counter-element="counter" data-counter-start="100" data-counter-end="200" data-counter-duration="1000" data-counter-threshold="25" data-counter-locale="en-US">1234</div>
+<div data-counter-element="counter" data-counter-start="100" data-counter-end="200" data-counter-duration="1000" data-counter-threshold="25" data-counter-locale="de-DE" data-content-decimals="1">1234.1</div>
 ```

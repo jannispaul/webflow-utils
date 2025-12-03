@@ -1,4 +1,5 @@
 // Script to create number counter
+// Based on finsweet number counter but improved with decimal support, easing options, and setting start value on initialization. Preventing flickering.
 // Attributes:
 // data-counter-element="counter" -> put counter element
 // data-counter-start="100" -> start value

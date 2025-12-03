@@ -223,7 +223,7 @@ Example html:
 
 ## Number counter
 
-Script to animate number count up.
+Script to animate number count up. Based on [finsweet number count](https://finsweet.com/attributes/v1/number-count) but improved with decimal support, easing options, and setting start value on initialization, to prevent flickering.
 
 **Required attributes:**
 

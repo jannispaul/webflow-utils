@@ -17,6 +17,12 @@ class Accordion {
     this.summary = el.querySelector("summary");
     this.content = el.querySelector("[data-accordion-element='content']");
 
+    // Handle open attribute based on data-accordion-start-open value
+    const startOpen = this.el.getAttribute("data-accordion-start-open");
+    if (startOpen !== "true") {
+      this.el.removeAttribute("open");
+    }
+
     // Standard animation settings
     this.duration = parseInt(this.el.dataset.accordionDuration) || 400;
     this.easing = this.el.dataset.accordionEasing || "cubic-bezier(0.45, 0, 0.55, 1)";

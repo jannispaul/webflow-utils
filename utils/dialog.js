@@ -2,291 +2,303 @@
 // Docs for dialog: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
 
 class DialogManager {
-  // --- Constants and Configuration ---
-  static #ATTRIBUTES = {
-      ID: "data-dialog-id",
-      TRIGGER: "data-dialog-trigger",
-      DELAY: "data-dialog-delay",
-      EXIT_INTENT: "data-dialog-exit-intent",
-      SCROLL: "data-dialog-scroll",
-      COOLDOWN: "data-dialog-cooldown",
-      CLOSE: "data-dialog-close",
-  };
-
-  // Cooldown times in seconds, used for string lookup
-  static #COOLDOWN_SECONDS = {
-      day: 86400,
-      week: 604800,
-      month: 2592000,
-  };
-
-  // --- State and Initialization ---
-  #dialogContentElements;
-  #triggerDialogElements;
-  #lastFocusedElement = null; // New: Store the element that triggered the dialog
-
-  constructor() {
-      this.#dialogContentElements = document.querySelectorAll(`[${DialogManager.#ATTRIBUTES.ID}]`);
-      this.#triggerDialogElements = document.querySelectorAll(`[${DialogManager.#ATTRIBUTES.TRIGGER}]`);
-
-      document.addEventListener("DOMContentLoaded", this.init.bind(this));
-      this.#createDialogStyle();
-      console.log("Dialog script initialized");
-  }
-
-  async init() {
-      await this.#addDialogs();
-
-      const dialogs = document.querySelectorAll(`dialog[${DialogManager.#ATTRIBUTES.ID}]`);
-
-      this.#initializeDialogCloseHandlers(dialogs);
-      this.#initializeAllTriggers(dialogs);
-      this.#initializeClickTriggers();
-
-      window.dispatchEvent(new CustomEvent("dialogs-created"));
-      console.log("Dialogs ready.");
-  }
-
-  // --- Dialog Creation and Structure ---
-
-  #createDialog(element) {
-      let dialog = document.createElement("dialog");
-      const dialogId = element.getAttribute(DialogManager.#ATTRIBUTES.ID);
-
-      dialog.append(element);
-      
-      dialog.setAttribute(DialogManager.#ATTRIBUTES.ID, dialogId);
-      element.removeAttribute(DialogManager.#ATTRIBUTES.ID);
-
-      // Transfer all data-dialog-* attributes from content element to the <dialog>
-      [...element.attributes]
-          .filter((attr) => attr.name.startsWith("data-dialog-"))
-          .forEach((attr) => {
-              dialog.setAttribute(attr.name, attr.value);
-              element.removeAttribute(attr.name);
-          });
-
-      document.body.append(dialog);
-  }
-
-  async #addDialogs() {
-      this.#dialogContentElements.forEach((element) => {
-          this.#createDialog(element);
-      });
-      return Promise.resolve();
-  }
-
-  // --- Helper Functions ---
-
-  #getCoolDownTime(dialog) {
-      const cooldownAttr = dialog.getAttribute(DialogManager.#ATTRIBUTES.COOLDOWN);
-      if (!cooldownAttr) return 0;
-
-      if (DialogManager.#COOLDOWN_SECONDS[cooldownAttr]) {
-          return DialogManager.#COOLDOWN_SECONDS[cooldownAttr] * 1000;
-      }
-
-      const seconds = parseInt(cooldownAttr);
-      return isNaN(seconds) ? 0 : seconds * 1000;
-  }
-
-  #canTriggerDialog(dialogName, cooldown) {
-      const lastOpenTime = localStorage.getItem(`${dialogName}_last_open`);
-      if (!lastOpenTime) return true;
-
-      const timeSinceLastOpen = Date.now() - parseInt(lastOpenTime);
-      return timeSinceLastOpen >= cooldown;
-  }
-
-  #isDialogOpen() {
-      return !!document.querySelector("dialog[open]");
-  }
-
-  // --- Trigger Initialization (unchanged) ---
-
-  #initializeAllTriggers(dialogs) {
-      dialogs.forEach((dialog) => {
-          const dialogName = dialog.getAttribute(DialogManager.#ATTRIBUTES.ID);
-          const cooldown = this.#getCoolDownTime(dialog);
-
-          if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.DELAY)) {
-              this.#initializeTimeTrigger(dialog, dialogName, cooldown);
-          }
-          const scrollTrigger = document.querySelector(`[${DialogManager.#ATTRIBUTES.SCROLL}="${dialogName}"]`);
-          if (scrollTrigger) {
-              this.#initializeScrollTrigger(dialog, scrollTrigger, dialogName, cooldown);
-          }
-          if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.EXIT_INTENT)) {
-              this.#initializeExitIntentTrigger(dialog, dialogName, cooldown);
-          }
-      });
-  }
-
-  #initializeTimeTrigger(dialog, dialogName, cooldown) {
-      const delay = parseInt(dialog.getAttribute(DialogManager.#ATTRIBUTES.DELAY)) * 1000;
-
-      if (this.#canTriggerDialog(dialogName, cooldown)) {
-          setTimeout(() => {
-              this.#canTriggerDialog(dialogName, cooldown) && this.openDialog(dialog);
-          }, delay);
-      }
-  }
-
-  #initializeScrollTrigger(dialog, triggerElement, dialogName, cooldown) {
-      const observer = new IntersectionObserver(
-          (entries) => {
-              entries.forEach((entry) => {
-                  if (entry.isIntersecting && this.#canTriggerDialog(dialogName, cooldown)) {
-                      this.openDialog(dialog);
-                      observer.unobserve(triggerElement);
-                  }
-              });
-          },
-          { threshold: 0.5 }
-      );
-      observer.observe(triggerElement);
-  }
-
-  #initializeExitIntentTrigger(dialog, dialogName, cooldown) {
-      document.addEventListener("mouseout", (e) => {
-          if (e.clientY <= 0 && this.#canTriggerDialog(dialogName, cooldown)) {
-              this.openDialog(dialog);
-          }
-      });
-  }
-
-  #initializeClickTriggers() {
-      this.#triggerDialogElements.forEach((element) => {
-          element.addEventListener("click", () => {
-              const dialogName = element.getAttribute(DialogManager.#ATTRIBUTES.TRIGGER);
-              const dialog = document.querySelector(`dialog[${DialogManager.#ATTRIBUTES.ID}="${dialogName}"]`);
-              if (!dialog) return;
-              this.openDialog(dialog);
-          });
-      });
-  }
-
-  // --- Dialog Open/Close Logic ---
-
-  #initializeDialogCloseHandlers(dialogs) {
-      dialogs.forEach(dialog => {
-          dialog.addEventListener("click", (e) => {
-              if (e.target === dialog || e.target.closest(`[${DialogManager.#ATTRIBUTES.CLOSE}]`)) {
-                  // Check for target before calling close, allows animation reverse if needed
-                  dialog.close();
-              }
-          });
-          
-          dialog.addEventListener("close", () => {
-              // Restore focus for A11Y
-              if (this.#lastFocusedElement) {
-                  this.#lastFocusedElement.focus();
-                  this.#lastFocusedElement = null;
-              }
-              document.body.style.overflow = '';
-              window.dispatchEvent(new CustomEvent("dialog-closed", { detail: { element: dialog } }));
-          });
-      });
-  }
-
-  // Public method, accessible via window.dialogs.open(name)
-  openDialog(dialog) {
-      if (this.#isDialogOpen()) return;
-
-      // Save the currently focused element (the element that triggered the dialog)
-      this.#lastFocusedElement = document.activeElement;
-      
-      const dialogName = dialog.getAttribute(DialogManager.#ATTRIBUTES.ID);
-
-      dialog.showModal();
-      document.body.style.overflow = 'hidden';
-      
-      // Only set opened flag if dialog has cooldown attribute
-      if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.COOLDOWN)) {
-          localStorage.setItem(`${dialogName}_last_open`, Date.now().toString());
-      }
-      
-      window.dispatchEvent(new CustomEvent("dialog-opened", { detail: { element: dialog } }));
-  }
-
-  // Public method to close dialog by name (for external API)
-  closeDialog(dialogName) {
-      const dialog = document.querySelector(`dialog[${DialogManager.#ATTRIBUTES.ID}="${dialogName}"]`);
-      if (dialog) {
-          dialog.close();
-          return true;
-      }
-      return false;
-  }
-
-  // Public method to close all open dialogs
-  closeAllDialogs() {
-      document.querySelectorAll("dialog[open]").forEach(d => d.close());
-  }
-
-  // --- Styling (unchanged) ---
-
-  #createDialogStyle() {
-      let style = document.createElement("style");
-      style.innerHTML = `
+    // --- Constants and Configuration ---
+    static #ATTRIBUTES = {
+        ID: "data-dialog-id",
+        TRIGGER: "data-dialog-trigger",
+        DELAY: "data-dialog-delay",
+        EXIT_INTENT: "data-dialog-exit-intent",
+        SCROLL: "data-dialog-scroll",
+        COOLDOWN: "data-dialog-cooldown",
+        CLOSE: "data-dialog-close",
+    };
   
-          dialog {
-              border: none;
-              background: transparent;
-              padding: 0;
-              opacity: 0;
-              transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-              transform: translateY(2rem);
-          }
-          ::backdrop{ 
-              opacity: 0;
-              transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete;
-          }
-          dialog[open] {
-              opacity: 1;
-              transform: translateY(0rem);
-          }
-          dialog[open]::backdrop {
-              opacity: 1;
-          }
-          @starting-style {
-              dialog[open], dialog[open]::backdrop {
-              opacity: 0;
-              transform: translateY(2rem);
-              }
-          } 
-      `;
-      document.head.appendChild(style);
-  }
-}
-
-// Instantiate the manager
-const managerInstance = new DialogManager();
-
-// Expose a public API under window.dialogs
-window.dialogs = {
-  /**
-   * Programmatically opens a dialog by its data-dialog-id.
-   * @param {string} dialogName The value of the data-dialog-id attribute.
-   * @returns {boolean} True if the dialog was found and opened (or was already open), false otherwise.
-   */
-  open: (dialogName) => {
-      const dialog = document.querySelector(`dialog[${DialogManager.ATTRIBUTES.ID}="${dialogName}"]`);
-      if (dialog) {
-          managerInstance.openDialog(dialog);
-          return true;
-      }
-      return false;
-  },
-  /**
-   * Programmatically closes a dialog by its data-dialog-id.
-   * @param {string} dialogName The value of the data-dialog-id attribute.
-   * @returns {boolean} True if the dialog was found and closed, false otherwise.
-   */
-  close: (dialogName) => managerInstance.closeDialog(dialogName),
+    static get ATTRIBUTES() {
+        return this.#ATTRIBUTES;
+    }
   
-  /**
-   * Closes all currently open dialogs.
-   */
-  closeAll: () => managerInstance.closeAllDialogs(),
-};
+    static #COOLDOWN_SECONDS = {
+        day: 86400,
+        week: 604800,
+        month: 2592000,
+    };
+  
+    // --- State ---
+    #dialogContentElements;
+    #triggerDialogElements;
+    #lastFocusedElement = null;
+  
+    constructor() {
+        this.#dialogContentElements = document.querySelectorAll(`[${DialogManager.#ATTRIBUTES.ID}]`);
+        this.#triggerDialogElements = document.querySelectorAll(`[${DialogManager.#ATTRIBUTES.TRIGGER}]`);
+  
+        // FIX: Ensure init runs even if DOMContentLoaded already fired
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", this.init.bind(this));
+        } else {
+            this.init();
+        }
+        
+        this.#createDialogStyle();
+        console.log("Dialog script initialized");
+    }
+  
+    async init() {
+        await this.#addDialogs();
+        const dialogs = document.querySelectorAll(`dialog[${DialogManager.#ATTRIBUTES.ID}]`);
+  
+        this.#initializeDialogCloseHandlers(dialogs);
+        this.#initializeAutoTriggers(dialogs);
+        this.#initializeClickTriggers();
+  
+        window.dispatchEvent(new CustomEvent("dialogs-created"));
+        console.log("Dialogs ready. Triggers active.");
+    }
+  
+    // --- Dialog Creation ---
+  
+    #createDialog(element) {
+        let dialog = document.createElement("dialog");
+        const dialogId = element.getAttribute(DialogManager.#ATTRIBUTES.ID);
+        dialog.append(element);
+        dialog.setAttribute(DialogManager.#ATTRIBUTES.ID, dialogId);
+        element.removeAttribute(DialogManager.#ATTRIBUTES.ID);
+  
+        [...element.attributes]
+            .filter((attr) => attr.name.startsWith("data-dialog-"))
+            .forEach((attr) => {
+                dialog.setAttribute(attr.name, attr.value);
+                element.removeAttribute(attr.name);
+            });
+  
+        document.body.append(dialog);
+    }
+  
+    async #addDialogs() {
+        this.#dialogContentElements.forEach((element) => this.#createDialog(element));
+        return Promise.resolve();
+    }
+  
+    // --- Logic & Constraints ---
+  
+    #getCoolDownTime(dialog) {
+        const cooldownAttr = dialog.getAttribute(DialogManager.#ATTRIBUTES.COOLDOWN);
+        if (!cooldownAttr) return 0;
+  
+        if (DialogManager.#COOLDOWN_SECONDS[cooldownAttr]) {
+            return DialogManager.#COOLDOWN_SECONDS[cooldownAttr] * 1000;
+        }
+        const seconds = parseInt(cooldownAttr);
+        return isNaN(seconds) ? 0 : seconds * 1000;
+    }
+  
+    #shouldAutoTrigger(dialogName, cooldown) {
+        // 1. Session Check
+        const hasOpenedThisSession = sessionStorage.getItem(`${dialogName}_has_opened`);
+        if (hasOpenedThisSession) {
+            console.log(`[DialogManager] Blocked auto-open for "${dialogName}": Already opened this session.`);
+            return false;
+        }
+  
+        // 2. Cooldown Check
+        const lastOpenTime = localStorage.getItem(`${dialogName}_last_open`);
+        if (!lastOpenTime) return true;
+  
+        const timeSinceLastOpen = Date.now() - parseInt(lastOpenTime);
+        const isCooldownOver = timeSinceLastOpen >= cooldown;
+        
+        if (!isCooldownOver) {
+             console.log(`[DialogManager] Blocked auto-open for "${dialogName}": In persistent cooldown.`);
+        }
+  
+        return isCooldownOver;
+    }
+  
+    #isDialogOpen() {
+        return !!document.querySelector("dialog[open]");
+    }
+  
+    // --- Trigger Initialization ---
+  
+    #initializeAutoTriggers(dialogs) {
+        dialogs.forEach((dialog) => {
+            const dialogName = dialog.getAttribute(DialogManager.#ATTRIBUTES.ID);
+            const cooldown = this.#getCoolDownTime(dialog);
+            
+            if (!dialogName) {
+                console.error("[DialogManager] Found dialog without an ID attribute. Skipping auto-triggers.", dialog);
+                return;
+            }
+  
+            if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.DELAY)) {
+                this.#initializeTimeTrigger(dialog, dialogName, cooldown);
+            }
+            
+            const scrollTrigger = document.querySelector(`[${DialogManager.#ATTRIBUTES.SCROLL}="${dialogName}"]`);
+            if (scrollTrigger) {
+                this.#initializeScrollTrigger(dialog, scrollTrigger, dialogName, cooldown);
+            }
+            
+            if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.EXIT_INTENT)) {
+                this.#initializeExitIntentTrigger(dialog, dialogName, cooldown);
+            }
+        });
+    }
+  
+    #initializeTimeTrigger(dialog, dialogName, cooldown) {
+        const delay = parseInt(dialog.getAttribute(DialogManager.#ATTRIBUTES.DELAY)) * 1000;
+        console.log(`[DialogManager] Timer set for "${dialogName}": ${delay}ms`);
+  
+        if (this.#shouldAutoTrigger(dialogName, cooldown)) {
+            setTimeout(() => {
+                if (this.#shouldAutoTrigger(dialogName, cooldown)) {
+                    console.log(`[DialogManager] Triggering Time Open for "${dialogName}"`);
+                    this.openDialog(dialog);
+                }
+            }, delay);
+        }
+    }
+  
+    #initializeScrollTrigger(dialog, triggerElement, dialogName, cooldown) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && this.#shouldAutoTrigger(dialogName, cooldown)) {
+                        console.log(`[DialogManager] Triggering Scroll Open for "${dialogName}"`);
+                        this.openDialog(dialog);
+                        observer.unobserve(triggerElement);
+                    }
+                });
+            },
+            { threshold: 0.5 }
+        );
+        observer.observe(triggerElement);
+    }
+  
+    #initializeExitIntentTrigger(dialog, dialogName, cooldown) {
+        // Listen to mouse movement over the entire document
+        document.addEventListener("mouseout", (e) => {
+            // Check 1: Did the mouse leave the document's top edge?
+            // Check 2: Was the mouse not moving onto another element within the document?
+            if (!e.relatedTarget && e.clientY <= 5) { // Adjusted threshold to 5px for better detection
+                if (this.#shouldAutoTrigger(dialogName, cooldown)) {
+                    console.log(`[DialogManager] Triggering Exit Intent for "${dialogName}"`);
+                    this.openDialog(dialog);
+                }
+            }
+        });
+    }
+  
+    #initializeClickTriggers() {
+        this.#triggerDialogElements.forEach((element) => {
+            element.addEventListener("click", (e) => {
+                e.preventDefault(); 
+                const dialogName = element.getAttribute(DialogManager.#ATTRIBUTES.TRIGGER);
+                const dialog = document.querySelector(`dialog[${DialogManager.#ATTRIBUTES.ID}="${dialogName}"]`);
+                if (!dialog) return;
+                this.openDialog(dialog);
+            });
+        });
+    }
+  
+    // --- Dialog Open/Close Logic ---
+  
+    #initializeDialogCloseHandlers(dialogs) {
+        dialogs.forEach(dialog => {
+            dialog.addEventListener("click", (e) => {
+                if (e.target === dialog || e.target.closest(`[${DialogManager.#ATTRIBUTES.CLOSE}]`)) {
+                    dialog.close();
+                }
+            });
+            
+            dialog.addEventListener("close", () => {
+                if (this.#lastFocusedElement) {
+                    this.#lastFocusedElement.focus();
+                    this.#lastFocusedElement = null;
+                }
+                document.body.style.overflow = '';
+                window.dispatchEvent(new CustomEvent("dialog-closed", { detail: { element: dialog } }));
+            });
+        });
+    }
+  
+    openDialog(dialog) {
+        if (this.#isDialogOpen()) return;
+  
+        this.#lastFocusedElement = document.activeElement;
+        const dialogName = dialog.getAttribute(DialogManager.#ATTRIBUTES.ID);
+  
+        dialog.showModal();
+        document.body.style.overflow = 'hidden';
+        
+        sessionStorage.setItem(`${dialogName}_has_opened`, "true");
+  
+        if (dialog.hasAttribute(DialogManager.#ATTRIBUTES.COOLDOWN)) {
+            localStorage.setItem(`${dialogName}_last_open`, Date.now().toString());
+        }
+        
+        window.dispatchEvent(new CustomEvent("dialog-opened", { detail: { element: dialog } }));
+    }
+  
+    closeDialog(dialogName) {
+        const dialog = document.querySelector(`dialog[${DialogManager.ATTRIBUTES.ID}="${dialogName}"]`);
+        if (dialog) {
+            dialog.close();
+            return true;
+        }
+        return false;
+    }
+  
+    closeAllDialogs() {
+        document.querySelectorAll("dialog[open]").forEach(d => d.close());
+    }
+  
+    // --- Styling ---
+  
+    #createDialogStyle() {
+        let style = document.createElement("style");
+        style.innerHTML = `
+            dialog {
+                border: none;
+                background: transparent;
+                padding: 0;
+                opacity: 0;
+                transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+                transform: translateY(2rem);
+            }
+            ::backdrop{ 
+                opacity: 0;
+                transition: opacity 0.4s, display 0.4s allow-discrete, overlay 0.4s allow-discrete;
+            }
+            dialog[open] {
+                opacity: 1;
+                transform: translateY(0rem);
+            }
+            dialog[open]::backdrop {
+                opacity: 1;
+            }
+            @starting-style {
+                dialog[open], dialog[open]::backdrop {
+                opacity: 0;
+                transform: translateY(2rem);
+                }
+            } 
+        `;
+        document.head.appendChild(style);
+    }
+  }
+  
+  const managerInstance = new DialogManager();
+  
+  window.dialogs = {
+    open: (dialogName) => {
+        const dialog = document.querySelector(`dialog[${DialogManager.ATTRIBUTES.ID}="${dialogName}"]`);
+        if (dialog) {
+            managerInstance.openDialog(dialog);
+            return true;
+        }
+        return false;
+    },
+    close: (dialogName) => managerInstance.closeDialog(dialogName),
+    closeAll: () => managerInstance.closeAllDialogs(),
+  };

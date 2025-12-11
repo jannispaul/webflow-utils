@@ -17,6 +17,10 @@ class Accordion {
     this.summary = el.querySelector("summary");
     this.content = el.querySelector("[data-accordion-element='content']");
 
+    // Store the instance on the element so we can access it later 
+    // without creating new instances (fixes the memory leak/event listener bug)
+    this.el.accordionInstance = this;
+
     // Handle open attribute based on data-accordion-start-open value
     const startOpen = this.el.getAttribute("data-accordion-start-open");
     if (startOpen !== "true") {
@@ -61,11 +65,15 @@ class Accordion {
       `[data-accordion-group="${this.group}"][open]`
     );
 
-    accordionsInGroup.forEach((accordion) => {
-      if (accordion !== this.el) {
-        // We create a temporary instance just to close it cleanly
-        // This ensures the "Instant Close" logic below runs for these too
-        new Accordion(accordion).shrink();
+    accordionsInGroup.forEach((accordionElement) => {
+      if (accordionElement !== this.el) {
+        // FIX: Retrieve the existing instance instead of creating a new one
+        if (accordionElement.accordionInstance) {
+          accordionElement.accordionInstance.shrink();
+        } else {
+          // Fallback if for some reason the instance isn't attached
+          new Accordion(accordionElement).shrink();
+        }
       }
     });
   }
@@ -73,7 +81,7 @@ class Accordion {
   shrink() {
     this.isClosing = true;
     this.el.classList.remove("open");
-    
+
     // ACCESSIBILITY: Instant close if reduced motion is preferred
     if (this.mediaQuery.matches) {
       this.el.removeAttribute("open"); // Native close
@@ -110,9 +118,8 @@ class Accordion {
 
     // ACCESSIBILITY: Instant open if reduced motion is preferred
     if (this.mediaQuery.matches) {
-        // Height is already calculated in open(), so we just finish immediately
-        this.onAnimationFinish(true);
-        return;
+      this.onAnimationFinish(true);
+      return;
     }
 
     const startHeight = `${this.el.offsetHeight}px`;
